@@ -1,0 +1,57 @@
+{
+  "name": "flux-backend",
+  "version": "1.0.0",
+  "description": "Flux - Next-generation expense tracking backend with AI, IoT, and blockchain integration",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --host 0.0.0.0 --port 3000",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "start": "node build/index.js",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "lint": "prettier --check . && eslint .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@sveltejs/adapter-node": "^5.0.1",
+    "@sveltejs/kit": "^2.0.0",
+    "pg": "^8.11.3",
+    "redis": "^4.6.12",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^4.0.0",
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.10.9",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-svelte": "^2.35.1",
+    "prettier": "^3.1.1",
+    "prettier-plugin-svelte": "^3.1.2",
+    "svelte": "^5.0.0",
+    "svelte-check": "^4.0.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.3"
+  },
+  "engines": {
+    "bun": ">=1.0.0",
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/flux-backend.git"
+  },
+  "keywords": [
+    "flux",
+    "expense-tracking",
+    "svelte",
+    "railway",
+    "supabase",
+    "ai",
+    "blockchain",
+    "iot",
+    "phonepe"
+  ],
+  "author": "Flux Team",
+  "license": "MIT"
+} 
