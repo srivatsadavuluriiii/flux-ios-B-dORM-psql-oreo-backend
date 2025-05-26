@@ -1,0 +1,13 @@
+[install]
+# Use exact versions for production stability
+exact = true
+
+# Cache configuration  
+cache = ".bun-cache"
+
+# Production optimizations
+production = true
+
+[run]
+# Prefer bun runtime
+bun = true 

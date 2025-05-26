@@ -1,4 +1,5 @@
 import { createClient, type RedisClientType } from 'redis';
+import { FLUX_CONFIG } from '../config/environment.js';
 
 /**
  * Flux Redis Cache Connection
@@ -18,12 +19,12 @@ class FluxRedis {
    */
   private async initializeClient(): Promise<void> {
     try {
-      const redisUrl = process.env.REDIS_URL;
-      
-      if (!redisUrl) {
-        console.warn('[Flux Redis] REDIS_URL not provided, cache features will be disabled');
-        return;
-      }
+          const redisUrl = FLUX_CONFIG.redisUrl;
+    
+    if (!redisUrl) {
+      console.warn('[Flux Redis] REDIS_URL not provided, cache features will be disabled');
+      return;
+    }
 
       this.client = createClient({
         url: redisUrl,

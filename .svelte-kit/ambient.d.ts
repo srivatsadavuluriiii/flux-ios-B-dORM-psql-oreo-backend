@@ -26,6 +26,65 @@
  * ```
  */
 declare module '$env/static/private' {
+	export const NODE_ENV: string;
+	export const DATABASE_URL: string;
+	export const DATABASE_POOL_MIN: string;
+	export const DATABASE_POOL_MAX: string;
+	export const DATABASE_TIMEOUT: string;
+	export const REDIS_URL: string;
+	export const CACHE_TTL_DEFAULT: string;
+	export const PORT: string;
+	export const HOST: string;
+	export const FLUX_VERSION: string;
+	export const FLUX_ENV: string;
+	export const APP_NAME: string;
+	export const APP_VERSION: string;
+	export const NEXT_PUBLIC_SUPABASE_URL: string;
+	export const SUPABASE_SERVICE_ROLE_KEY: string;
+	export const SUPABASE_ANON_KEY: string;
+	export const SUPABASE_JWT_SECRET: string;
+	export const JWT_SECRET: string;
+	export const JWT_EXPIRES_IN: string;
+	export const JWT_REFRESH_EXPIRES_IN: string;
+	export const GITHUB_CLIENT_ID: string;
+	export const GITHUB_CLIENT_SECRET: string;
+	export const GOOGLE_CLIENT_ID: string;
+	export const GOOGLE_CLIENT_SECRET: string;
+	export const GEMINI_API_KEY: string;
+	export const GEMINI_MODEL: string;
+	export const AI_REQUEST_TIMEOUT: string;
+	export const PHONEPE_MERCHANT_ID: string;
+	export const PHONEPE_SALT_KEY: string;
+	export const PHONEPE_SALT_INDEX: string;
+	export const PHONEPE_ENVIRONMENT: string;
+	export const PHONEPE_CALLBACK_URL: string;
+	export const BLYNK_AUTH_TOKEN: string;
+	export const BLYNK_SERVER_URL: string;
+	export const IOT_SYNC_INTERVAL: string;
+	export const HYPERLEDGER_NETWORK_URL: string;
+	export const HYPERLEDGER_CERT_PATH: string;
+	export const HYPERLEDGER_CHANNEL_NAME: string;
+	export const HYPERLEDGER_CHAINCODE_NAME: string;
+	export const UPLOAD_MAX_SIZE: string;
+	export const ALLOWED_FILE_TYPES: string;
+	export const OCR_MAX_FILE_SIZE: string;
+	export const OCR_SUPPORTED_FORMATS: string;
+	export const RATE_LIMIT_WINDOW: string;
+	export const RATE_LIMIT_MAX_REQUESTS: string;
+	export const CORS_ORIGIN: string;
+	export const WEBHOOK_SECRET: string;
+	export const ENCRYPTION_KEY: string;
+	export const LOG_LEVEL: string;
+	export const METRICS_RETENTION: string;
+	export const ERROR_ALERT_THRESHOLD: string;
+	export const PERFORMANCE_ALERT_THRESHOLD: string;
+	export const GDPR_COMPLIANCE: string;
+	export const DPDP_COMPLIANCE: string;
+	export const PCI_DSS_MODE: string;
+	export const AUDIT_LOG_RETENTION: string;
+	export const DATA_RETENTION_DAYS: string;
+	export const RAILWAY_ENVIRONMENT: string;
+	export const RAILWAY_API_URL: string;
 	export const NVM_INC: string;
 	export const TERM_PROGRAM: string;
 	export const NODE: string;
@@ -50,6 +109,7 @@ declare module '$env/static/private' {
 	export const SSH_AUTH_SOCK: string;
 	export const __CF_USER_TEXT_ENCODING: string;
 	export const npm_execpath: string;
+	export const PAGER: string;
 	export const PYDEVD_DISABLE_FILE_VALIDATION: string;
 	export const _CE_CONDA: string;
 	export const PATH: string;
@@ -61,6 +121,7 @@ declare module '$env/static/private' {
 	export const __CFBundleIdentifier: string;
 	export const npm_command: string;
 	export const PWD: string;
+	export const DISABLE_AUTO_UPDATE: string;
 	export const npm_lifecycle_event: string;
 	export const npm_package_name: string;
 	export const LANG: string;
@@ -90,7 +151,7 @@ declare module '$env/static/private' {
 	export const GIT_ASKPASS: string;
 	export const npm_node_execpath: string;
 	export const COLORTERM: string;
-	export const NODE_ENV: string;
+	export const VITE_USER_NODE_ENV: string;
 }
 
 /**
@@ -122,6 +183,65 @@ declare module '$env/static/public' {
  */
 declare module '$env/dynamic/private' {
 	export const env: {
+		NODE_ENV: string;
+		DATABASE_URL: string;
+		DATABASE_POOL_MIN: string;
+		DATABASE_POOL_MAX: string;
+		DATABASE_TIMEOUT: string;
+		REDIS_URL: string;
+		CACHE_TTL_DEFAULT: string;
+		PORT: string;
+		HOST: string;
+		FLUX_VERSION: string;
+		FLUX_ENV: string;
+		APP_NAME: string;
+		APP_VERSION: string;
+		NEXT_PUBLIC_SUPABASE_URL: string;
+		SUPABASE_SERVICE_ROLE_KEY: string;
+		SUPABASE_ANON_KEY: string;
+		SUPABASE_JWT_SECRET: string;
+		JWT_SECRET: string;
+		JWT_EXPIRES_IN: string;
+		JWT_REFRESH_EXPIRES_IN: string;
+		GITHUB_CLIENT_ID: string;
+		GITHUB_CLIENT_SECRET: string;
+		GOOGLE_CLIENT_ID: string;
+		GOOGLE_CLIENT_SECRET: string;
+		GEMINI_API_KEY: string;
+		GEMINI_MODEL: string;
+		AI_REQUEST_TIMEOUT: string;
+		PHONEPE_MERCHANT_ID: string;
+		PHONEPE_SALT_KEY: string;
+		PHONEPE_SALT_INDEX: string;
+		PHONEPE_ENVIRONMENT: string;
+		PHONEPE_CALLBACK_URL: string;
+		BLYNK_AUTH_TOKEN: string;
+		BLYNK_SERVER_URL: string;
+		IOT_SYNC_INTERVAL: string;
+		HYPERLEDGER_NETWORK_URL: string;
+		HYPERLEDGER_CERT_PATH: string;
+		HYPERLEDGER_CHANNEL_NAME: string;
+		HYPERLEDGER_CHAINCODE_NAME: string;
+		UPLOAD_MAX_SIZE: string;
+		ALLOWED_FILE_TYPES: string;
+		OCR_MAX_FILE_SIZE: string;
+		OCR_SUPPORTED_FORMATS: string;
+		RATE_LIMIT_WINDOW: string;
+		RATE_LIMIT_MAX_REQUESTS: string;
+		CORS_ORIGIN: string;
+		WEBHOOK_SECRET: string;
+		ENCRYPTION_KEY: string;
+		LOG_LEVEL: string;
+		METRICS_RETENTION: string;
+		ERROR_ALERT_THRESHOLD: string;
+		PERFORMANCE_ALERT_THRESHOLD: string;
+		GDPR_COMPLIANCE: string;
+		DPDP_COMPLIANCE: string;
+		PCI_DSS_MODE: string;
+		AUDIT_LOG_RETENTION: string;
+		DATA_RETENTION_DAYS: string;
+		RAILWAY_ENVIRONMENT: string;
+		RAILWAY_API_URL: string;
 		NVM_INC: string;
 		TERM_PROGRAM: string;
 		NODE: string;
@@ -146,6 +266,7 @@ declare module '$env/dynamic/private' {
 		SSH_AUTH_SOCK: string;
 		__CF_USER_TEXT_ENCODING: string;
 		npm_execpath: string;
+		PAGER: string;
 		PYDEVD_DISABLE_FILE_VALIDATION: string;
 		_CE_CONDA: string;
 		PATH: string;
@@ -157,6 +278,7 @@ declare module '$env/dynamic/private' {
 		__CFBundleIdentifier: string;
 		npm_command: string;
 		PWD: string;
+		DISABLE_AUTO_UPDATE: string;
 		npm_lifecycle_event: string;
 		npm_package_name: string;
 		LANG: string;
@@ -186,7 +308,7 @@ declare module '$env/dynamic/private' {
 		GIT_ASKPASS: string;
 		npm_node_execpath: string;
 		COLORTERM: string;
-		NODE_ENV: string;
+		VITE_USER_NODE_ENV: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}

@@ -1,5 +1,5 @@
+import { k as getContext, p as push, l as push_element, m as pop_element, j as pop, F as FILENAME } from "../../chunks/index2.js";
 import "clsx";
-import { g as getContext, c as pop, p as push } from "../../chunks/index2.js";
 import { n as noop } from "../../chunks/equality.js";
 import { w as writable } from "../../chunks/exports.js";
 const CONTENT_REGEX = /[&<]/g;
@@ -53,6 +53,17 @@ get(SNAPSHOT_KEY) ?? {};
 const stores = {
   updated: /* @__PURE__ */ create_updated_store()
 };
+{
+  const console_warn = console.warn;
+  console.warn = function warn(...args) {
+    if (args.length === 1 && /<(Layout|Page|Error)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
+      args[0]
+    )) {
+      return;
+    }
+    console_warn(...args);
+  };
+}
 ({
   check: stores.updated.check
 });
@@ -68,11 +79,22 @@ const page$1 = {
   }
 };
 const page = page$1;
+Error$1[FILENAME] = "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/error.svelte";
 function Error$1($$payload, $$props) {
-  push();
-  $$payload.out += `<h1>${escape_html(page.status)}</h1> <p>${escape_html(page.error?.message)}</p>`;
+  push(Error$1);
+  $$payload.out += `<h1>`;
+  push_element($$payload, "h1", 5, 0);
+  $$payload.out += `${escape_html(page.status)}</h1>`;
+  pop_element();
+  $$payload.out += ` <p>`;
+  push_element($$payload, "p", 6, 0);
+  $$payload.out += `${escape_html(page.error?.message)}</p>`;
+  pop_element();
   pop();
 }
+Error$1.render = function() {
+  throw new Error$1("Component.render(...) is no longer valid in Svelte 5. See https://svelte.dev/docs/svelte/v5-migration-guide#Components-are-no-longer-classes for more information");
+};
 export {
   Error$1 as default
 };

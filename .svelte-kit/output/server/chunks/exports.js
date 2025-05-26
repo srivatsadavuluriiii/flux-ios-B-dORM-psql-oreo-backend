@@ -1,5 +1,5 @@
 import { n as noop, j as safe_not_equal } from "./equality.js";
-import "clsx";
+import "./index2.js";
 const internal = new URL("sveltekit-internal://");
 function resolve(base, path) {
   if (path[0] === "/" && path[1] === "/") return path;

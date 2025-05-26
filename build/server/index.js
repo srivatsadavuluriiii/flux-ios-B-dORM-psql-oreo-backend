@@ -1,8 +1,8 @@
-import { d as define_property, s as safe_equals, o as object_prototype, a as array_prototype, g as get_descriptor, i as is_extensible, b as array_from, e as equals, c as get_prototype_of, f as is_array, r as run_all, h as index_of, j as decode_pathname, k as decode_params, n as normalize_path, l as disable_search, v as validate_layout_server_exports, m as validate_layout_exports, p as validate_page_server_exports, q as validate_page_exports, t as resolve, u as make_trackable, w as readable, x as writable } from './chunks/exports-CoBaX9l6.js';
-import { r as render, H as HYDRATION_START, a as HYDRATION_ERROR, b as HYDRATION_END, U as UNINITIALIZED, p as push$1, s as setContext, c as pop$1 } from './chunks/index2-C4QVi8Sc.js';
-import { j as json, t as text } from './chunks/index-BIAFQWR9.js';
+import { d as define_property, s as safe_equals, o as object_prototype, a as array_prototype, g as get_descriptor, i as is_extensible, b as array_from, e as equals, c as get_prototype_of, f as is_array, r as run_all, h as index_of, j as decode_pathname, k as decode_params, v as validate_server_exports, n as normalize_path, l as disable_search, m as validate_layout_server_exports, p as validate_layout_exports, q as validate_page_server_exports, t as validate_page_exports, u as resolve, w as make_trackable, x as readable, y as writable } from './chunks/exports-DeXB_skn.js';
+import { r as render, H as HYDRATION_START, a as HYDRATION_ERROR, b as HYDRATION_END, h as hydration_failed, s as state_prototype_fixed, U as UNINITIALIZED, c as state_descriptors_fixed, d as derived_references_self, e as effect_update_depth_exceeded, F as FILENAME, f as state_unsafe_mutation, p as push$1, g as setContext, i as pop$1, j as snippet_without_render_tag } from './chunks/index2-DJznNaDV.js';
+import { H as HttpError, j as json, t as text, R as Redirect, S as SvelteKitError, A as ActionFailure } from './chunks/index-DyoisQP2.js';
 
-const BROWSER = false;
+const DEV = true;
 let base = "";
 let assets = base;
 const app_dir = "_app";
@@ -39,40 +39,20 @@ const INERT = 1 << 13;
 const DESTROYED = 1 << 14;
 const EFFECT_RAN = 1 << 15;
 const EFFECT_TRANSPARENT = 1 << 16;
+const INSPECT_EFFECT = 1 << 18;
 const HEAD_EFFECT = 1 << 19;
 const EFFECT_HAS_DERIVED = 1 << 20;
 const EFFECT_IS_UPDATING = 1 << 21;
 const STATE_SYMBOL = Symbol("$state");
 const LEGACY_PROPS = Symbol("legacy props");
-function effect_update_depth_exceeded() {
-  {
-    throw new Error(`https://svelte.dev/e/effect_update_depth_exceeded`);
-  }
-}
-function hydration_failed() {
-  {
-    throw new Error(`https://svelte.dev/e/hydration_failed`);
-  }
-}
-function state_descriptors_fixed() {
-  {
-    throw new Error(`https://svelte.dev/e/state_descriptors_fixed`);
-  }
-}
-function state_prototype_fixed() {
-  {
-    throw new Error(`https://svelte.dev/e/state_prototype_fixed`);
-  }
-}
-function state_unsafe_mutation() {
-  {
-    throw new Error(`https://svelte.dev/e/state_unsafe_mutation`);
-  }
-}
 let tracing_mode_flag = false;
 let component_context = null;
 function set_component_context(context) {
   component_context = context;
+}
+let dev_current_component_function = null;
+function set_dev_current_component_function(fn) {
+  dev_current_component_function = fn;
 }
 function push(props, runes = false, fn) {
   var ctx = component_context = {
@@ -88,6 +68,10 @@ function push(props, runes = false, fn) {
   teardown(() => {
     ctx.d = true;
   });
+  {
+    component_context.function = fn;
+    dev_current_component_function = fn;
+  }
 }
 function pop(component) {
   const context_stack_item = component_context;
@@ -110,6 +94,9 @@ function pop(component) {
       }
     }
     component_context = context_stack_item.p;
+    {
+      dev_current_component_function = context_stack_item.p?.function ?? null;
+    }
     context_stack_item.m = true;
   }
   return (
@@ -316,6 +303,15 @@ function proxy(value) {
 function update_version(signal, d = 1) {
   set(signal, signal.v + d);
 }
+function get_proxied_value(value) {
+  try {
+    if (value !== null && typeof value === "object" && STATE_SYMBOL in value) {
+      return value[STATE_SYMBOL];
+    }
+  } catch {
+  }
+  return value;
+}
 function destroy_derived_effects(derived) {
   var effects = derived.effects;
   if (effects !== null) {
@@ -328,6 +324,7 @@ function destroy_derived_effects(derived) {
     }
   }
 }
+let stack = [];
 function get_derived_parent_effect(derived) {
   var parent = derived.parent;
   while (parent !== null) {
@@ -346,11 +343,19 @@ function execute_derived(derived) {
   var prev_active_effect = active_effect;
   set_active_effect(get_derived_parent_effect(derived));
   {
+    let prev_inspect_effects = inspect_effects;
+    set_inspect_effects(/* @__PURE__ */ new Set());
     try {
+      if (stack.includes(derived)) {
+        derived_references_self();
+      }
+      stack.push(derived);
       destroy_derived_effects(derived);
       value = update_reaction(derived);
     } finally {
       set_active_effect(prev_active_effect);
+      set_inspect_effects(prev_inspect_effects);
+      stack.pop();
     }
   }
   return value;
@@ -365,8 +370,12 @@ function update_derived(derived) {
   var status = (skip_reaction || (derived.f & UNOWNED) !== 0) && derived.deps !== null ? MAYBE_DIRTY : CLEAN;
   set_signal_status(derived, status);
 }
+let inspect_effects = /* @__PURE__ */ new Set();
 const old_values = /* @__PURE__ */ new Map();
-function source(v, stack) {
+function set_inspect_effects(v) {
+  inspect_effects = v;
+}
+function source(v, stack2) {
   var signal = {
     f: 0,
     // TODO ideally we could skip this altogether, but it causes type errors
@@ -379,7 +388,7 @@ function source(v, stack) {
   return signal;
 }
 // @__NO_SIDE_EFFECTS__
-function state(v, stack) {
+function state(v, stack2) {
   const s = source(v);
   push_reaction_value(s);
   return s;
@@ -426,6 +435,18 @@ function internal_set(source2, value) {
         untracked_writes.push(source2);
       }
     }
+    if (inspect_effects.size > 0) {
+      const inspects = Array.from(inspect_effects);
+      for (const effect2 of inspects) {
+        if ((effect2.f & CLEAN) !== 0) {
+          set_signal_status(effect2, MAYBE_DIRTY);
+        }
+        if (check_dirtiness(effect2)) {
+          update_effect(effect2);
+        }
+      }
+      inspect_effects.clear();
+    }
   }
   return value;
 }
@@ -437,6 +458,10 @@ function mark_reactions(signal, status) {
     var reaction = reactions[i];
     var flags = reaction.f;
     if ((flags & DIRTY) !== 0) continue;
+    if ((flags & INSPECT_EFFECT) !== 0) {
+      inspect_effects.add(reaction);
+      continue;
+    }
     set_signal_status(reaction, status);
     if ((flags & (CLEAN | UNOWNED)) !== 0) {
       if ((flags & DERIVED) !== 0) {
@@ -454,9 +479,27 @@ function mark_reactions(signal, status) {
     }
   }
 }
+var bold = "font-weight: bold";
+var normal = "font-weight: normal";
 function hydration_mismatch(location) {
   {
-    console.warn(`https://svelte.dev/e/hydration_mismatch`);
+    console.warn(`%c[svelte] hydration_mismatch
+%c${"Hydration failed because the initial UI does not match what was rendered on the server"}
+https://svelte.dev/e/hydration_mismatch`, bold, normal);
+  }
+}
+function lifecycle_double_unmount() {
+  {
+    console.warn(`%c[svelte] lifecycle_double_unmount
+%cTried to unmount a component that was not mounted
+https://svelte.dev/e/lifecycle_double_unmount`, bold, normal);
+  }
+}
+function state_proxy_equality_mismatch(operator) {
+  {
+    console.warn(`%c[svelte] state_proxy_equality_mismatch
+%cReactive \`$state(...)\` proxies and the values they proxy have different identities. Because of this, comparisons with \`${operator}\` will produce unexpected results
+https://svelte.dev/e/state_proxy_equality_mismatch`, bold, normal);
   }
 }
 let hydrating = false;
@@ -477,7 +520,57 @@ function hydrate_next() {
     /* @__PURE__ */ get_next_sibling(hydrate_node)
   );
 }
+function init_array_prototype_warnings() {
+  const array_prototype2 = Array.prototype;
+  const cleanup = Array.__svelte_cleanup;
+  if (cleanup) {
+    cleanup();
+  }
+  const { indexOf, lastIndexOf, includes } = array_prototype2;
+  array_prototype2.indexOf = function(item, from_index) {
+    const index = indexOf.call(this, item, from_index);
+    if (index === -1) {
+      for (let i = from_index ?? 0; i < this.length; i += 1) {
+        if (get_proxied_value(this[i]) === item) {
+          state_proxy_equality_mismatch("array.indexOf(...)");
+          break;
+        }
+      }
+    }
+    return index;
+  };
+  array_prototype2.lastIndexOf = function(item, from_index) {
+    const index = lastIndexOf.call(this, item, from_index ?? this.length - 1);
+    if (index === -1) {
+      for (let i = 0; i <= (from_index ?? this.length - 1); i += 1) {
+        if (get_proxied_value(this[i]) === item) {
+          state_proxy_equality_mismatch("array.lastIndexOf(...)");
+          break;
+        }
+      }
+    }
+    return index;
+  };
+  array_prototype2.includes = function(item, from_index) {
+    const has = includes.call(this, item, from_index);
+    if (!has) {
+      for (let i = 0; i < this.length; i += 1) {
+        if (get_proxied_value(this[i]) === item) {
+          state_proxy_equality_mismatch("array.includes(...)");
+          break;
+        }
+      }
+    }
+    return has;
+  };
+  Array.__svelte_cleanup = () => {
+    array_prototype2.indexOf = indexOf;
+    array_prototype2.lastIndexOf = lastIndexOf;
+    array_prototype2.includes = includes;
+  };
+}
 var $window;
+var is_firefox;
 var first_child_getter;
 var next_sibling_getter;
 function init_operations() {
@@ -485,6 +578,7 @@ function init_operations() {
     return;
   }
   $window = window;
+  is_firefox = /Firefox/.test(navigator.userAgent);
   var element_prototype = Element.prototype;
   var node_prototype = Node.prototype;
   var text_prototype = Text.prototype;
@@ -499,6 +593,10 @@ function init_operations() {
   }
   if (is_extensible(text_prototype)) {
     text_prototype.__t = void 0;
+  }
+  {
+    element_prototype.__svelte_meta = null;
+    init_array_prototype_warnings();
   }
 }
 function create_text(value = "") {
@@ -527,6 +625,11 @@ function push_effect(effect2, parent_effect) {
 }
 function create_effect(type, fn, sync, push2 = true) {
   var parent = active_effect;
+  {
+    while (parent !== null && (parent.f & INSPECT_EFFECT) !== 0) {
+      parent = parent.parent;
+    }
+  }
   var effect2 = {
     ctx: component_context,
     deps: null,
@@ -543,6 +646,9 @@ function create_effect(type, fn, sync, push2 = true) {
     transitions: null,
     wv: 0
   };
+  {
+    effect2.component_function = dev_current_component_function;
+  }
   if (sync) {
     try {
       update_effect(effect2);
@@ -659,6 +765,9 @@ function destroy_effect(effect2, remove_dom = true) {
   if (parent !== null && parent.first !== null) {
     unlink_effect(effect2);
   }
+  {
+    effect2.component_function = null;
+  }
   effect2.next = effect2.prev = effect2.teardown = effect2.ctx = effect2.deps = effect2.fn = effect2.nodes_start = effect2.nodes_end = null;
 }
 function remove_effect_dom(node, end) {
@@ -739,6 +848,7 @@ function flush_tasks() {
     run_idle_tasks();
   }
 }
+const handled_errors = /* @__PURE__ */ new WeakSet();
 let is_throwing_error = false;
 let is_flushing = false;
 let last_scheduled_effect = null;
@@ -748,6 +858,7 @@ function set_is_destroying_effect(value) {
   is_destroying_effect = value;
 }
 let queued_root_effects = [];
+let dev_effect_stack = [];
 let active_reaction = null;
 let untracking = false;
 function set_active_reaction(reaction) {
@@ -865,6 +976,48 @@ function handle_error(error, effect2, previous_effect, component_context2) {
   }
   if (previous_effect !== null) {
     is_throwing_error = true;
+  }
+  if (component_context2 !== null && error instanceof Error && !handled_errors.has(error)) {
+    handled_errors.add(error);
+    const component_stack = [];
+    const effect_name = effect2.fn?.name;
+    if (effect_name) {
+      component_stack.push(effect_name);
+    }
+    let current_context = component_context2;
+    while (current_context !== null) {
+      var filename = current_context.function?.[FILENAME];
+      if (filename) {
+        const file = filename.split("/").pop();
+        component_stack.push(file);
+      }
+      current_context = current_context.p;
+    }
+    const indent = is_firefox ? "  " : "	";
+    define_property(error, "message", {
+      value: error.message + `
+${component_stack.map((name) => `
+${indent}in ${name}`).join("")}
+`
+    });
+    define_property(error, "component_stack", {
+      value: component_stack
+    });
+    const stack2 = error.stack;
+    if (stack2) {
+      const lines = stack2.split("\n");
+      const new_lines = [];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.includes("svelte/src/internal")) {
+          continue;
+        }
+        new_lines.push(line);
+      }
+      define_property(error, "stack", {
+        value: new_lines.join("\n")
+      });
+    }
   }
   propagate_error(error, effect2);
   if (should_rethrow_error(effect2)) {
@@ -1029,6 +1182,10 @@ function update_effect(effect2) {
   var was_updating_effect = is_updating_effect;
   active_effect = effect2;
   is_updating_effect = true;
+  {
+    var previous_component_fn = dev_current_component_function;
+    set_dev_current_component_function(effect2.component_function);
+  }
   try {
     if ((flags & BLOCK_EFFECT) !== 0) {
       destroy_block_effect_children(effect2);
@@ -1041,24 +1198,49 @@ function update_effect(effect2) {
     effect2.wv = write_version;
     var deps = effect2.deps;
     var dep;
-    if (BROWSER && tracing_mode_flag && (effect2.f & DIRTY) !== 0 && deps !== null) ;
-    if (BROWSER) ;
+    if (DEV && tracing_mode_flag && (effect2.f & DIRTY) !== 0 && deps !== null) ;
+    if (DEV) {
+      dev_effect_stack.push(effect2);
+    }
   } catch (error) {
     handle_error(error, effect2, previous_effect, previous_component_context || effect2.ctx);
   } finally {
     is_updating_effect = was_updating_effect;
     active_effect = previous_effect;
+    {
+      set_dev_current_component_function(previous_component_fn);
+    }
   }
+}
+function log_effect_stack() {
+  console.error(
+    "Last ten effects were: ",
+    dev_effect_stack.slice(-10).map((d) => d.fn)
+  );
+  dev_effect_stack = [];
 }
 function infinite_loop_guard() {
   try {
     effect_update_depth_exceeded();
   } catch (error) {
+    {
+      define_property(error, "stack", {
+        value: ""
+      });
+    }
     if (last_scheduled_effect !== null) {
       {
-        handle_error(error, last_scheduled_effect, null);
+        try {
+          handle_error(error, last_scheduled_effect, null, null);
+        } catch (e) {
+          log_effect_stack();
+          throw e;
+        }
       }
     } else {
+      {
+        log_effect_stack();
+      }
       throw error;
     }
   }
@@ -1085,6 +1267,9 @@ function flush_queued_root_effects() {
     is_flushing = false;
     is_updating_effect = was_updating_effect;
     last_scheduled_effect = null;
+    {
+      dev_effect_stack = [];
+    }
   }
 }
 function flush_queued_effects(effects) {
@@ -1462,7 +1647,17 @@ function unmount(component, options2) {
     mounted_components.delete(component);
     return fn(options2);
   }
+  {
+    lifecycle_double_unmount();
+  }
   return Promise.resolve();
+}
+function prevent_snippet_stringification(fn) {
+  fn.toString = () => {
+    snippet_without_render_tag();
+    return "";
+  };
+  return fn;
 }
 function asClassComponent$1(component) {
   return class extends Svelte4Component {
@@ -1583,8 +1778,9 @@ function asClassComponent(component) {
   component_constructor.render = _render;
   return component_constructor;
 }
+Root[FILENAME] = ".svelte-kit/generated/root.svelte";
 function Root($$payload, $$props) {
-  push$1();
+  push$1(Root);
   let {
     stores,
     page,
@@ -1608,11 +1804,11 @@ function Root($$payload, $$props) {
     Pyramid_0($$payload, {
       data: data_0,
       form,
-      children: ($$payload2) => {
+      children: prevent_snippet_stringification(($$payload2) => {
         $$payload2.out += `<!---->`;
         Pyramid_1($$payload2, { data: data_1, form });
         $$payload2.out += `<!---->`;
-      },
+      }),
       $$slots: { default: true }
     });
     $$payload.out += `<!---->`;
@@ -1630,6 +1826,9 @@ function Root($$payload, $$props) {
   $$payload.out += `<!--]-->`;
   pop$1();
 }
+Root.render = function() {
+  throw new Error("Component.render(...) is no longer valid in Svelte 5. See https://svelte.dev/docs/svelte/v5-migration-guide#Components-are-no-longer-classes for more information");
+};
 const root = asClassComponent(Root);
 const options = {
   app_template_contains_nonce: false,
@@ -1717,14 +1916,14 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "1xkyp1b"
+  version_hash: "10jn4jb"
 };
 async function get_hooks() {
   let handle;
   let handleFetch;
   let handleError;
   let init;
-  ({ handle, handleFetch, handleError, init } = await import('./chunks/hooks.server-DlJz0FP3.js'));
+  ({ handle, handleFetch, handleError, init } = await import('./chunks/hooks.server-B-G9Sj9D.js'));
   let reroute;
   let transport;
   return {
@@ -3049,57 +3248,6 @@ function with_event(event, fn) {
     request_event = null;
   }
 }
-class HttpError {
-  /**
-   * @param {number} status
-   * @param {{message: string} extends App.Error ? (App.Error | string | undefined) : App.Error} body
-   */
-  constructor(status, body2) {
-    this.status = status;
-    if (typeof body2 === "string") {
-      this.body = { message: body2 };
-    } else if (body2) {
-      this.body = body2;
-    } else {
-      this.body = { message: `Error: ${status}` };
-    }
-  }
-  toString() {
-    return JSON.stringify(this.body);
-  }
-}
-class Redirect {
-  /**
-   * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status
-   * @param {string} location
-   */
-  constructor(status, location) {
-    this.status = status;
-    this.location = location;
-  }
-}
-class SvelteKitError extends Error {
-  /**
-   * @param {number} status
-   * @param {string} text
-   * @param {string} message
-   */
-  constructor(status, text2, message) {
-    super(message);
-    this.status = status;
-    this.text = text2;
-  }
-}
-class ActionFailure {
-  /**
-   * @param {number} status
-   * @param {T} data
-   */
-  constructor(status, data) {
-    this.status = status;
-    this.data = data;
-  }
-}
 const DATA_SUFFIX = "/__data.json";
 const HTML_DATA_SUFFIX = ".html__data.json";
 function has_data_suffix(pathname) {
@@ -3195,6 +3343,9 @@ function allowed_methods(mod) {
 }
 function static_error_page(options2, status, message) {
   let page = options2.templates.error({ status, message: escape_html(message) });
+  {
+    page = page.replace("</head>", '<script type="module" src="/@vite/client"><\/script></head>');
+  }
   return text(page, {
     headers: { "content-type": "text/html; charset=utf-8" },
     status
@@ -3356,7 +3507,7 @@ async function handle_action_json_request(event, options2, server) {
     const no_actions_error = new SvelteKitError(
       405,
       "Method Not Allowed",
-      `POST method not allowed. No form actions exist for ${"this page"}`
+      `POST method not allowed. No form actions exist for ${`the page at ${event.route.id}`}`
     );
     return action_json(
       {
@@ -3449,7 +3600,7 @@ async function handle_action_request(event, server) {
       error: new SvelteKitError(
         405,
         "Method Not Allowed",
-        `POST method not allowed. No form actions exist for ${"this page"}`
+        `POST method not allowed. No form actions exist for ${`the page at ${event.route.id}`}`
       )
     };
   }
@@ -3558,6 +3709,14 @@ function try_serialize(data, fn, route_id) {
     throw error;
   }
 }
+function validate_depends(route_id, dep) {
+  const match = /^(moz-icon|view-source|jar):/.exec(dep);
+  if (match) {
+    console.warn(
+      `${route_id}: Calling \`depends('${dep}')\` will throw an error in Firefox because \`${match[1]}\` is a special URI scheme`
+    );
+  }
+}
 const INVALIDATED_PARAM = "x-sveltekit-invalidated";
 const TRAILING_SLASH_PARAM = "x-sveltekit-trailing-slash";
 function b64_encode(buffer) {
@@ -3602,11 +3761,21 @@ async function load_server_data({ event, state, node, parent }) {
   const url = make_trackable(
     event.url,
     () => {
+      if (done && !uses.url) {
+        console.warn(
+          `${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
+        );
+      }
       if (is_tracking) {
         uses.url = true;
       }
     },
     (param) => {
+      if (done && !uses.search_params.has(param)) {
+        console.warn(
+          `${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
+        );
+      }
       if (is_tracking) {
         uses.search_params.add(param);
       }
@@ -3622,20 +3791,37 @@ async function load_server_data({ event, state, node, parent }) {
       ...event,
       fetch: (info, init2) => {
         const url2 = new URL(info instanceof Request ? info.url : info, event.url);
-        if (BROWSER && done && !uses.dependencies.has(url2.href)) ;
+        if (DEV && done && !uses.dependencies.has(url2.href)) {
+          console.warn(
+            `${node.server_id}: Calling \`event.fetch(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+          );
+        }
         return event.fetch(info, init2);
       },
       /** @param {string[]} deps */
       depends: (...deps) => {
         for (const dep of deps) {
           const { href } = new URL(dep, event.url);
-          if (BROWSER) ;
+          if (DEV) {
+            validate_depends(node.server_id || "missing route ID", dep);
+            if (done && !uses.dependencies.has(href)) {
+              console.warn(
+                `${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+              );
+            }
+          }
           uses.dependencies.add(href);
         }
       },
       params: new Proxy(event.params, {
         get: (target, key2) => {
-          if (BROWSER && done && typeof key2 === "string" && !uses.params.has(key2)) ;
+          if (DEV && done && typeof key2 === "string" && !uses.params.has(key2)) {
+            console.warn(
+              `${node.server_id}: Accessing \`params.${String(
+                key2
+              )}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the param changes`
+            );
+          }
           if (is_tracking) {
             uses.params.add(key2);
           }
@@ -3646,7 +3832,11 @@ async function load_server_data({ event, state, node, parent }) {
         }
       }),
       parent: async () => {
-        if (BROWSER && done && !uses.parent) ;
+        if (DEV && done && !uses.parent) {
+          console.warn(
+            `${node.server_id}: Calling \`parent(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when parent data changes`
+          );
+        }
         if (is_tracking) {
           uses.parent = true;
         }
@@ -3654,7 +3844,13 @@ async function load_server_data({ event, state, node, parent }) {
       },
       route: new Proxy(event.route, {
         get: (target, key2) => {
-          if (BROWSER && done && typeof key2 === "string" && !uses.route) ;
+          if (DEV && done && typeof key2 === "string" && !uses.route) {
+            console.warn(
+              `${node.server_id}: Accessing \`route.${String(
+                key2
+              )}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
+            );
+          }
           if (is_tracking) {
             uses.route = true;
           }
@@ -4764,6 +4960,21 @@ ${indent}}`);
   if (!chunks) {
     headers2.set("etag", `"${hash(transformed)}"`);
   }
+  {
+    if (page_config.csr) {
+      if (transformed.split("<!--").length < html.split("<!--").length) {
+        console.warn(
+          "\x1B[1m\x1B[31mRemoving comments in transformPageChunk can break Svelte's hydration\x1B[39m\x1B[22m"
+        );
+      }
+    } else {
+      if (chunks) {
+        console.warn(
+          "\x1B[1m\x1B[31mReturning promises from server `load` functions will only work if `csr === true`\x1B[39m\x1B[22m"
+        );
+      }
+    }
+  }
   return !chunks ? text(transformed, {
     status,
     headers: headers2
@@ -5287,7 +5498,17 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
     const ssr = nodes.ssr();
     const csr = nodes.csr();
     if (ssr === false && !(state.prerendering && should_prerender_data)) {
-      if (BROWSER && action_result && !event.request.headers.has("x-sveltekit-action")) ;
+      if (DEV && action_result && !event.request.headers.has("x-sveltekit-action")) {
+        if (action_result.type === "error") {
+          console.warn(
+            "The form action returned an error, but +error.svelte wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance"
+          );
+        } else if (action_result.data) {
+          console.warn(
+            "The form action returned a value, but it isn't available in `page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance"
+          );
+        }
+      }
       return await render_response({
         branch: [],
         fetched,
@@ -5913,12 +6134,20 @@ async function respond(request, options2, manifest, state) {
       if (url.pathname === base || url.pathname === base + "/") {
         trailing_slash = "always";
       } else if (page_nodes) {
-        if (BROWSER) ;
+        if (DEV) {
+          page_nodes.validate();
+        }
         trailing_slash = page_nodes.trailing_slash();
       } else if (route.endpoint) {
         const node = await route.endpoint();
         trailing_slash = node.trailingSlash ?? "never";
-        if (BROWSER) ;
+        if (DEV) {
+          validate_server_exports(
+            node,
+            /** @type {string} */
+            route.endpoint_id
+          );
+        }
       }
       if (!is_data_request) {
         const normalized = normalize_path(url.pathname, trailing_slash);
@@ -6233,7 +6462,16 @@ class Server {
         }
       } catch (error) {
         {
-          throw error;
+          this.#options.hooks = {
+            handle: () => {
+              throw error;
+            },
+            handleError: ({ error: error2 }) => console.error(error2),
+            handleFetch: ({ request, fetch: fetch2 }) => fetch2(request),
+            reroute: () => {
+            },
+            transport: {}
+          };
         }
       }
     })());

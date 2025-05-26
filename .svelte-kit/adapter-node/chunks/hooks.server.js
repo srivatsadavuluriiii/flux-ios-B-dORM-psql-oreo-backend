@@ -1,5 +1,7 @@
 import { createClient } from "redis";
+import { F as FLUX_CONFIG } from "./environment.js";
 import { j as json } from "./index.js";
+import { a as authMiddleware } from "./auth-middleware.js";
 function sequence(...handlers) {
   const length = handlers.length;
   if (!length) return ({ event, resolve }) => resolve(event);
@@ -42,7 +44,7 @@ class FluxRedis {
    */
   async initializeClient() {
     try {
-      const redisUrl = process.env.REDIS_URL;
+      const redisUrl = FLUX_CONFIG.redisUrl;
       if (!redisUrl) {
         console.warn("[Flux Redis] REDIS_URL not provided, cache features will be disabled");
         return;
@@ -409,6 +411,7 @@ const handle = sequence(
   corsMiddleware,
   securityMiddleware,
   loggingMiddleware,
+  authMiddleware,
   rateLimitMiddleware,
   cacheMiddleware
 );

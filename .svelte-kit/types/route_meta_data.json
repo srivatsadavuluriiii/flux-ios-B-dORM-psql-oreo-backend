@@ -1,6 +1,57 @@
 {
 	"/": [],
+	"/api/admin/migrate": [
+		"src/routes/api/admin/migrate/+server.ts"
+	],
 	"/api/health": [
 		"src/routes/api/health/+server.ts"
+	],
+	"/api/v1/auth/oauth": [
+		"src/routes/api/v1/auth/oauth/+server.ts"
+	],
+	"/api/v1/auth/oauth/github": [
+		"src/routes/api/v1/auth/oauth/github/+server.ts"
+	],
+	"/api/v1/auth/oauth/github/callback": [
+		"src/routes/api/v1/auth/oauth/github/callback/+server.ts"
+	],
+	"/api/v1/auth/oauth/google": [
+		"src/routes/api/v1/auth/oauth/google/+server.ts"
+	],
+	"/api/v1/auth/oauth/google/callback": [
+		"src/routes/api/v1/auth/oauth/google/callback/+server.ts"
+	],
+	"/api/v1/auth/profile": [
+		"src/routes/api/v1/auth/profile/+server.ts"
+	],
+	"/api/v1/auth/refresh": [
+		"src/routes/api/v1/auth/refresh/+server.ts"
+	],
+	"/api/v1/auth/signin": [
+		"src/routes/api/v1/auth/signin/+server.ts"
+	],
+	"/api/v1/auth/signup": [
+		"src/routes/api/v1/auth/signup/+server.ts"
+	],
+	"/api/v1/auth/sync-user": [
+		"src/routes/api/v1/auth/sync-user/+server.ts"
+	],
+	"/api/v1/auth/webhook": [
+		"src/routes/api/v1/auth/webhook/+server.ts"
+	],
+	"/api/v1/expenses": [
+		"src/routes/api/v1/expenses/+server.ts"
+	],
+	"/api/v1/expenses/analytics": [
+		"src/routes/api/v1/expenses/analytics/+server.ts"
+	],
+	"/api/v1/expenses/categories": [
+		"src/routes/api/v1/expenses/categories/+server.ts"
+	],
+	"/api/v1/expenses/[id]": [
+		"src/routes/api/v1/expenses/[id]/+server.ts"
+	],
+	"/api/v1/test": [
+		"src/routes/api/v1/test/+server.ts"
 	]
 }

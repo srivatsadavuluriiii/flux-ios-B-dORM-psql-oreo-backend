@@ -8,15 +8,34 @@
       "_internal.js"
     ]
   },
+  "_auth-middleware.js": {
+    "file": "chunks/auth-middleware.js",
+    "name": "auth-middleware",
+    "imports": [
+      "_supabase.js"
+    ]
+  },
+  "_environment.js": {
+    "file": "chunks/environment.js",
+    "name": "environment"
+  },
   "_equality.js": {
     "file": "chunks/equality.js",
     "name": "equality"
+  },
+  "_expense-service.js": {
+    "file": "chunks/expense-service.js",
+    "name": "expense-service",
+    "imports": [
+      "_postgres.js"
+    ]
   },
   "_exports.js": {
     "file": "chunks/exports.js",
     "name": "exports",
     "imports": [
-      "_equality.js"
+      "_equality.js",
+      "_index2.js"
     ]
   },
   "_index.js": {
@@ -38,6 +57,28 @@
       "src/hooks.server.ts"
     ]
   },
+  "_postgres.js": {
+    "file": "chunks/postgres.js",
+    "name": "postgres",
+    "imports": [
+      "_environment.js"
+    ]
+  },
+  "_supabase.js": {
+    "file": "chunks/supabase.js",
+    "name": "supabase",
+    "imports": [
+      "_environment.js"
+    ]
+  },
+  "_user-sync.js": {
+    "file": "chunks/user-sync.js",
+    "name": "user-sync",
+    "imports": [
+      "_postgres.js",
+      "_environment.js"
+    ]
+  },
   "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/error.svelte": {
     "file": "entries/fallbacks/error.svelte.js",
     "name": "entries/fallbacks/error.svelte",
@@ -53,7 +94,10 @@
     "file": "entries/fallbacks/layout.svelte.js",
     "name": "entries/fallbacks/layout.svelte",
     "src": "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/layout.svelte",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_index2.js"
+    ]
   },
   "node_modules/@sveltejs/kit/src/runtime/server/index.js": {
     "file": "index.js",
@@ -72,7 +116,9 @@
     "src": "src/hooks.server.ts",
     "isDynamicEntry": true,
     "imports": [
-      "_index.js"
+      "_environment.js",
+      "_index.js",
+      "_auth-middleware.js"
     ]
   },
   "src/routes/+page.svelte": {
@@ -94,6 +140,161 @@
     "isEntry": true,
     "imports": [
       "_index.js"
+    ]
+  },
+  "src/routes/api/v1/auth/oauth/+server.ts": {
+    "file": "entries/endpoints/api/v1/auth/oauth/_server.ts.js",
+    "name": "entries/endpoints/api/v1/auth/oauth/_server.ts",
+    "src": "src/routes/api/v1/auth/oauth/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_environment.js"
+    ]
+  },
+  "src/routes/api/v1/auth/oauth/github/+server.ts": {
+    "file": "entries/endpoints/api/v1/auth/oauth/github/_server.ts.js",
+    "name": "entries/endpoints/api/v1/auth/oauth/github/_server.ts",
+    "src": "src/routes/api/v1/auth/oauth/github/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_supabase.js"
+    ]
+  },
+  "src/routes/api/v1/auth/oauth/github/callback/+server.ts": {
+    "file": "entries/endpoints/api/v1/auth/oauth/github/callback/_server.ts.js",
+    "name": "entries/endpoints/api/v1/auth/oauth/github/callback/_server.ts",
+    "src": "src/routes/api/v1/auth/oauth/github/callback/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_supabase.js"
+    ]
+  },
+  "src/routes/api/v1/auth/oauth/google/+server.ts": {
+    "file": "entries/endpoints/api/v1/auth/oauth/google/_server.ts.js",
+    "name": "entries/endpoints/api/v1/auth/oauth/google/_server.ts",
+    "src": "src/routes/api/v1/auth/oauth/google/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_supabase.js"
+    ]
+  },
+  "src/routes/api/v1/auth/oauth/google/callback/+server.ts": {
+    "file": "entries/endpoints/api/v1/auth/oauth/google/callback/_server.ts.js",
+    "name": "entries/endpoints/api/v1/auth/oauth/google/callback/_server.ts",
+    "src": "src/routes/api/v1/auth/oauth/google/callback/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_supabase.js"
+    ]
+  },
+  "src/routes/api/v1/auth/profile/+server.ts": {
+    "file": "entries/endpoints/api/v1/auth/profile/_server.ts.js",
+    "name": "entries/endpoints/api/v1/auth/profile/_server.ts",
+    "src": "src/routes/api/v1/auth/profile/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_user-sync.js"
+    ]
+  },
+  "src/routes/api/v1/auth/refresh/+server.ts": {
+    "file": "entries/endpoints/api/v1/auth/refresh/_server.ts.js",
+    "name": "entries/endpoints/api/v1/auth/refresh/_server.ts",
+    "src": "src/routes/api/v1/auth/refresh/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_supabase.js"
+    ]
+  },
+  "src/routes/api/v1/auth/signin/+server.ts": {
+    "file": "entries/endpoints/api/v1/auth/signin/_server.ts.js",
+    "name": "entries/endpoints/api/v1/auth/signin/_server.ts",
+    "src": "src/routes/api/v1/auth/signin/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_supabase.js"
+    ]
+  },
+  "src/routes/api/v1/auth/signup/+server.ts": {
+    "file": "entries/endpoints/api/v1/auth/signup/_server.ts.js",
+    "name": "entries/endpoints/api/v1/auth/signup/_server.ts",
+    "src": "src/routes/api/v1/auth/signup/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_supabase.js"
+    ]
+  },
+  "src/routes/api/v1/auth/sync-user/+server.ts": {
+    "file": "entries/endpoints/api/v1/auth/sync-user/_server.ts.js",
+    "name": "entries/endpoints/api/v1/auth/sync-user/_server.ts",
+    "src": "src/routes/api/v1/auth/sync-user/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_user-sync.js",
+      "_supabase.js"
+    ]
+  },
+  "src/routes/api/v1/auth/webhook/+server.ts": {
+    "file": "entries/endpoints/api/v1/auth/webhook/_server.ts.js",
+    "name": "entries/endpoints/api/v1/auth/webhook/_server.ts",
+    "src": "src/routes/api/v1/auth/webhook/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_user-sync.js"
+    ]
+  },
+  "src/routes/api/v1/expenses/+server.ts": {
+    "file": "entries/endpoints/api/v1/expenses/_server.ts.js",
+    "name": "entries/endpoints/api/v1/expenses/_server.ts",
+    "src": "src/routes/api/v1/expenses/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_expense-service.js",
+      "_auth-middleware.js"
+    ]
+  },
+  "src/routes/api/v1/expenses/[id]/+server.ts": {
+    "file": "entries/endpoints/api/v1/expenses/_id_/_server.ts.js",
+    "name": "entries/endpoints/api/v1/expenses/_id_/_server.ts",
+    "src": "src/routes/api/v1/expenses/[id]/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_expense-service.js",
+      "_auth-middleware.js"
+    ]
+  },
+  "src/routes/api/v1/expenses/analytics/+server.ts": {
+    "file": "entries/endpoints/api/v1/expenses/analytics/_server.ts.js",
+    "name": "entries/endpoints/api/v1/expenses/analytics/_server.ts",
+    "src": "src/routes/api/v1/expenses/analytics/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_expense-service.js",
+      "_auth-middleware.js"
+    ]
+  },
+  "src/routes/api/v1/expenses/categories/+server.ts": {
+    "file": "entries/endpoints/api/v1/expenses/categories/_server.ts.js",
+    "name": "entries/endpoints/api/v1/expenses/categories/_server.ts",
+    "src": "src/routes/api/v1/expenses/categories/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_postgres.js",
+      "_auth-middleware.js"
     ]
   }
 }

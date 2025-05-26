@@ -1,4 +1,5 @@
 import { Pool, type PoolClient, type QueryResult } from 'pg';
+import { FLUX_CONFIG } from '../config/environment.js';
 
 /**
  * Flux PostgreSQL Database Connection
@@ -18,7 +19,7 @@ class FluxPostgreSQL {
    */
   private initializePool(): void {
     try {
-      const databaseUrl = process.env.DATABASE_URL;
+      const databaseUrl = FLUX_CONFIG.databaseUrl;
       
       if (!databaseUrl) {
         console.warn('[Flux PostgreSQL] DATABASE_URL not provided, database features will be disabled');
@@ -137,7 +138,7 @@ class FluxPostgreSQL {
    */
   async healthCheck(): Promise<{ status: string; message: string; details?: any }> {
     try {
-      if (!process.env.DATABASE_URL) {
+      if (!FLUX_CONFIG.databaseUrl) {
         return {
           status: 'disabled',
           message: 'PostgreSQL not configured - DATABASE_URL missing',

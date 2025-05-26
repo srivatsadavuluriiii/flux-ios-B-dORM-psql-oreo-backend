@@ -1,7 +1,7 @@
-import { o as object_prototype, a as array_prototype, g as get_descriptor, b as get_prototype_of, i as is_array, s as safe_equals, e as equals, c as is_extensible, r as run_all, d as index_of, f as define_property, h as array_from } from "./equality.js";
-import { U as UNINITIALIZED, H as HYDRATION_ERROR, a as HYDRATION_START, b as HYDRATION_END, r as render, p as push$1, s as setContext, c as pop$1 } from "./index2.js";
+import { o as object_prototype, a as array_prototype, g as get_descriptor, b as get_prototype_of, i as is_array, s as safe_equals, e as equals, c as is_extensible, r as run_all, d as define_property, f as index_of, h as array_from } from "./equality.js";
+import { s as state_prototype_fixed, U as UNINITIALIZED, a as state_descriptors_fixed, d as derived_references_self, b as state_unsafe_mutation, H as HYDRATION_ERROR, e as effect_update_depth_exceeded, F as FILENAME, c as HYDRATION_START, f as HYDRATION_END, h as hydration_failed, g as snippet_without_render_tag, r as render, p as push$1, i as setContext, j as pop$1 } from "./index2.js";
 import "clsx";
-const BROWSER = false;
+const DEV = true;
 let base = "";
 let assets = base;
 const app_dir = "_app";
@@ -43,40 +43,20 @@ const INERT = 1 << 13;
 const DESTROYED = 1 << 14;
 const EFFECT_RAN = 1 << 15;
 const EFFECT_TRANSPARENT = 1 << 16;
+const INSPECT_EFFECT = 1 << 18;
 const HEAD_EFFECT = 1 << 19;
 const EFFECT_HAS_DERIVED = 1 << 20;
 const EFFECT_IS_UPDATING = 1 << 21;
 const STATE_SYMBOL = Symbol("$state");
 const LEGACY_PROPS = Symbol("legacy props");
-function effect_update_depth_exceeded() {
-  {
-    throw new Error(`https://svelte.dev/e/effect_update_depth_exceeded`);
-  }
-}
-function hydration_failed() {
-  {
-    throw new Error(`https://svelte.dev/e/hydration_failed`);
-  }
-}
-function state_descriptors_fixed() {
-  {
-    throw new Error(`https://svelte.dev/e/state_descriptors_fixed`);
-  }
-}
-function state_prototype_fixed() {
-  {
-    throw new Error(`https://svelte.dev/e/state_prototype_fixed`);
-  }
-}
-function state_unsafe_mutation() {
-  {
-    throw new Error(`https://svelte.dev/e/state_unsafe_mutation`);
-  }
-}
 let tracing_mode_flag = false;
 let component_context = null;
 function set_component_context(context) {
   component_context = context;
+}
+let dev_current_component_function = null;
+function set_dev_current_component_function(fn) {
+  dev_current_component_function = fn;
 }
 function push(props, runes = false, fn) {
   var ctx = component_context = {
@@ -92,6 +72,10 @@ function push(props, runes = false, fn) {
   teardown(() => {
     ctx.d = true;
   });
+  {
+    component_context.function = fn;
+    dev_current_component_function = fn;
+  }
 }
 function pop(component) {
   const context_stack_item = component_context;
@@ -114,6 +98,9 @@ function pop(component) {
       }
     }
     component_context = context_stack_item.p;
+    {
+      dev_current_component_function = context_stack_item.p?.function ?? null;
+    }
     context_stack_item.m = true;
   }
   return (
@@ -320,6 +307,15 @@ function proxy(value) {
 function update_version(signal, d = 1) {
   set(signal, signal.v + d);
 }
+function get_proxied_value(value) {
+  try {
+    if (value !== null && typeof value === "object" && STATE_SYMBOL in value) {
+      return value[STATE_SYMBOL];
+    }
+  } catch {
+  }
+  return value;
+}
 function destroy_derived_effects(derived) {
   var effects = derived.effects;
   if (effects !== null) {
@@ -332,6 +328,7 @@ function destroy_derived_effects(derived) {
     }
   }
 }
+let stack = [];
 function get_derived_parent_effect(derived) {
   var parent = derived.parent;
   while (parent !== null) {
@@ -350,11 +347,19 @@ function execute_derived(derived) {
   var prev_active_effect = active_effect;
   set_active_effect(get_derived_parent_effect(derived));
   {
+    let prev_inspect_effects = inspect_effects;
+    set_inspect_effects(/* @__PURE__ */ new Set());
     try {
+      if (stack.includes(derived)) {
+        derived_references_self();
+      }
+      stack.push(derived);
       destroy_derived_effects(derived);
       value = update_reaction(derived);
     } finally {
       set_active_effect(prev_active_effect);
+      set_inspect_effects(prev_inspect_effects);
+      stack.pop();
     }
   }
   return value;
@@ -369,8 +374,12 @@ function update_derived(derived) {
   var status = (skip_reaction || (derived.f & UNOWNED) !== 0) && derived.deps !== null ? MAYBE_DIRTY : CLEAN;
   set_signal_status(derived, status);
 }
+let inspect_effects = /* @__PURE__ */ new Set();
 const old_values = /* @__PURE__ */ new Map();
-function source(v, stack) {
+function set_inspect_effects(v) {
+  inspect_effects = v;
+}
+function source(v, stack2) {
   var signal = {
     f: 0,
     // TODO ideally we could skip this altogether, but it causes type errors
@@ -383,7 +392,7 @@ function source(v, stack) {
   return signal;
 }
 // @__NO_SIDE_EFFECTS__
-function state(v, stack) {
+function state(v, stack2) {
   const s = source(v);
   push_reaction_value(s);
   return s;
@@ -430,6 +439,18 @@ function internal_set(source2, value) {
         untracked_writes.push(source2);
       }
     }
+    if (inspect_effects.size > 0) {
+      const inspects = Array.from(inspect_effects);
+      for (const effect2 of inspects) {
+        if ((effect2.f & CLEAN) !== 0) {
+          set_signal_status(effect2, MAYBE_DIRTY);
+        }
+        if (check_dirtiness(effect2)) {
+          update_effect(effect2);
+        }
+      }
+      inspect_effects.clear();
+    }
   }
   return value;
 }
@@ -441,6 +462,10 @@ function mark_reactions(signal, status) {
     var reaction = reactions[i];
     var flags = reaction.f;
     if ((flags & DIRTY) !== 0) continue;
+    if ((flags & INSPECT_EFFECT) !== 0) {
+      inspect_effects.add(reaction);
+      continue;
+    }
     set_signal_status(reaction, status);
     if ((flags & (CLEAN | UNOWNED)) !== 0) {
       if ((flags & DERIVED) !== 0) {
@@ -458,9 +483,27 @@ function mark_reactions(signal, status) {
     }
   }
 }
+var bold = "font-weight: bold";
+var normal = "font-weight: normal";
 function hydration_mismatch(location) {
   {
-    console.warn(`https://svelte.dev/e/hydration_mismatch`);
+    console.warn(`%c[svelte] hydration_mismatch
+%c${"Hydration failed because the initial UI does not match what was rendered on the server"}
+https://svelte.dev/e/hydration_mismatch`, bold, normal);
+  }
+}
+function lifecycle_double_unmount() {
+  {
+    console.warn(`%c[svelte] lifecycle_double_unmount
+%cTried to unmount a component that was not mounted
+https://svelte.dev/e/lifecycle_double_unmount`, bold, normal);
+  }
+}
+function state_proxy_equality_mismatch(operator) {
+  {
+    console.warn(`%c[svelte] state_proxy_equality_mismatch
+%cReactive \`$state(...)\` proxies and the values they proxy have different identities. Because of this, comparisons with \`${operator}\` will produce unexpected results
+https://svelte.dev/e/state_proxy_equality_mismatch`, bold, normal);
   }
 }
 let hydrating = false;
@@ -481,7 +524,57 @@ function hydrate_next() {
     /* @__PURE__ */ get_next_sibling(hydrate_node)
   );
 }
+function init_array_prototype_warnings() {
+  const array_prototype2 = Array.prototype;
+  const cleanup = Array.__svelte_cleanup;
+  if (cleanup) {
+    cleanup();
+  }
+  const { indexOf, lastIndexOf, includes } = array_prototype2;
+  array_prototype2.indexOf = function(item, from_index) {
+    const index = indexOf.call(this, item, from_index);
+    if (index === -1) {
+      for (let i = from_index ?? 0; i < this.length; i += 1) {
+        if (get_proxied_value(this[i]) === item) {
+          state_proxy_equality_mismatch("array.indexOf(...)");
+          break;
+        }
+      }
+    }
+    return index;
+  };
+  array_prototype2.lastIndexOf = function(item, from_index) {
+    const index = lastIndexOf.call(this, item, from_index ?? this.length - 1);
+    if (index === -1) {
+      for (let i = 0; i <= (from_index ?? this.length - 1); i += 1) {
+        if (get_proxied_value(this[i]) === item) {
+          state_proxy_equality_mismatch("array.lastIndexOf(...)");
+          break;
+        }
+      }
+    }
+    return index;
+  };
+  array_prototype2.includes = function(item, from_index) {
+    const has = includes.call(this, item, from_index);
+    if (!has) {
+      for (let i = 0; i < this.length; i += 1) {
+        if (get_proxied_value(this[i]) === item) {
+          state_proxy_equality_mismatch("array.includes(...)");
+          break;
+        }
+      }
+    }
+    return has;
+  };
+  Array.__svelte_cleanup = () => {
+    array_prototype2.indexOf = indexOf;
+    array_prototype2.lastIndexOf = lastIndexOf;
+    array_prototype2.includes = includes;
+  };
+}
 var $window;
+var is_firefox;
 var first_child_getter;
 var next_sibling_getter;
 function init_operations() {
@@ -489,6 +582,7 @@ function init_operations() {
     return;
   }
   $window = window;
+  is_firefox = /Firefox/.test(navigator.userAgent);
   var element_prototype = Element.prototype;
   var node_prototype = Node.prototype;
   var text_prototype = Text.prototype;
@@ -503,6 +597,10 @@ function init_operations() {
   }
   if (is_extensible(text_prototype)) {
     text_prototype.__t = void 0;
+  }
+  {
+    element_prototype.__svelte_meta = null;
+    init_array_prototype_warnings();
   }
 }
 function create_text(value = "") {
@@ -531,6 +629,11 @@ function push_effect(effect2, parent_effect) {
 }
 function create_effect(type, fn, sync, push2 = true) {
   var parent = active_effect;
+  {
+    while (parent !== null && (parent.f & INSPECT_EFFECT) !== 0) {
+      parent = parent.parent;
+    }
+  }
   var effect2 = {
     ctx: component_context,
     deps: null,
@@ -547,6 +650,9 @@ function create_effect(type, fn, sync, push2 = true) {
     transitions: null,
     wv: 0
   };
+  {
+    effect2.component_function = dev_current_component_function;
+  }
   if (sync) {
     try {
       update_effect(effect2);
@@ -663,6 +769,9 @@ function destroy_effect(effect2, remove_dom = true) {
   if (parent !== null && parent.first !== null) {
     unlink_effect(effect2);
   }
+  {
+    effect2.component_function = null;
+  }
   effect2.next = effect2.prev = effect2.teardown = effect2.ctx = effect2.deps = effect2.fn = effect2.nodes_start = effect2.nodes_end = null;
 }
 function remove_effect_dom(node, end) {
@@ -743,6 +852,7 @@ function flush_tasks() {
     run_idle_tasks();
   }
 }
+const handled_errors = /* @__PURE__ */ new WeakSet();
 let is_throwing_error = false;
 let is_flushing = false;
 let last_scheduled_effect = null;
@@ -870,6 +980,48 @@ function handle_error(error, effect2, previous_effect, component_context2) {
   }
   if (previous_effect !== null) {
     is_throwing_error = true;
+  }
+  if (component_context2 !== null && error instanceof Error && !handled_errors.has(error)) {
+    handled_errors.add(error);
+    const component_stack = [];
+    const effect_name = effect2.fn?.name;
+    if (effect_name) {
+      component_stack.push(effect_name);
+    }
+    let current_context = component_context2;
+    while (current_context !== null) {
+      var filename = current_context.function?.[FILENAME];
+      if (filename) {
+        const file = filename.split("/").pop();
+        component_stack.push(file);
+      }
+      current_context = current_context.p;
+    }
+    const indent = is_firefox ? "  " : "	";
+    define_property(error, "message", {
+      value: error.message + `
+${component_stack.map((name) => `
+${indent}in ${name}`).join("")}
+`
+    });
+    define_property(error, "component_stack", {
+      value: component_stack
+    });
+    const stack2 = error.stack;
+    if (stack2) {
+      const lines = stack2.split("\n");
+      const new_lines = [];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.includes("svelte/src/internal")) {
+          continue;
+        }
+        new_lines.push(line);
+      }
+      define_property(error, "stack", {
+        value: new_lines.join("\n")
+      });
+    }
   }
   propagate_error(error, effect2);
   if (should_rethrow_error(effect2)) {
@@ -1034,6 +1186,10 @@ function update_effect(effect2) {
   var was_updating_effect = is_updating_effect;
   active_effect = effect2;
   is_updating_effect = true;
+  {
+    var previous_component_fn = dev_current_component_function;
+    set_dev_current_component_function(effect2.component_function);
+  }
   try {
     if ((flags & BLOCK_EFFECT) !== 0) {
       destroy_block_effect_children(effect2);
@@ -1046,24 +1202,49 @@ function update_effect(effect2) {
     effect2.wv = write_version;
     var deps = effect2.deps;
     var dep;
-    if (BROWSER && tracing_mode_flag && (effect2.f & DIRTY) !== 0 && deps !== null) ;
-    if (BROWSER) ;
+    if (DEV && tracing_mode_flag && (effect2.f & DIRTY) !== 0 && deps !== null) ;
+    if (DEV) {
+      dev_effect_stack.push(effect2);
+    }
   } catch (error) {
     handle_error(error, effect2, previous_effect, previous_component_context || effect2.ctx);
   } finally {
     is_updating_effect = was_updating_effect;
     active_effect = previous_effect;
+    {
+      set_dev_current_component_function(previous_component_fn);
+    }
   }
+}
+function log_effect_stack() {
+  console.error(
+    "Last ten effects were: ",
+    dev_effect_stack.slice(-10).map((d) => d.fn)
+  );
+  dev_effect_stack = [];
 }
 function infinite_loop_guard() {
   try {
     effect_update_depth_exceeded();
   } catch (error) {
+    {
+      define_property(error, "stack", {
+        value: ""
+      });
+    }
     if (last_scheduled_effect !== null) {
       {
-        handle_error(error, last_scheduled_effect, null);
+        try {
+          handle_error(error, last_scheduled_effect, null, null);
+        } catch (e) {
+          log_effect_stack();
+          throw e;
+        }
       }
     } else {
+      {
+        log_effect_stack();
+      }
       throw error;
     }
   }
@@ -1090,6 +1271,9 @@ function flush_queued_root_effects() {
     is_flushing = false;
     is_updating_effect = was_updating_effect;
     last_scheduled_effect = null;
+    {
+      dev_effect_stack = [];
+    }
   }
 }
 function flush_queued_effects(effects) {
@@ -1467,7 +1651,17 @@ function unmount(component, options2) {
     mounted_components.delete(component);
     return fn(options2);
   }
+  {
+    lifecycle_double_unmount();
+  }
   return Promise.resolve();
+}
+function prevent_snippet_stringification(fn) {
+  fn.toString = () => {
+    snippet_without_render_tag();
+    return "";
+  };
+  return fn;
 }
 function asClassComponent$1(component) {
   return class extends Svelte4Component {
@@ -1596,8 +1790,9 @@ function set_building() {
 function set_prerendering() {
   prerendering = true;
 }
+Root[FILENAME] = ".svelte-kit/generated/root.svelte";
 function Root($$payload, $$props) {
-  push$1();
+  push$1(Root);
   let {
     stores,
     page,
@@ -1621,11 +1816,11 @@ function Root($$payload, $$props) {
     Pyramid_0($$payload, {
       data: data_0,
       form,
-      children: ($$payload2) => {
+      children: prevent_snippet_stringification(($$payload2) => {
         $$payload2.out += `<!---->`;
         Pyramid_1($$payload2, { data: data_1, form });
         $$payload2.out += `<!---->`;
-      },
+      }),
       $$slots: { default: true }
     });
     $$payload.out += `<!---->`;
@@ -1643,6 +1838,9 @@ function Root($$payload, $$props) {
   $$payload.out += `<!--]-->`;
   pop$1();
 }
+Root.render = function() {
+  throw new Error("Component.render(...) is no longer valid in Svelte 5. See https://svelte.dev/docs/svelte/v5-migration-guide#Components-are-no-longer-classes for more information");
+};
 const root = asClassComponent(Root);
 const options = {
   app_template_contains_nonce: false,
@@ -1730,7 +1928,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "1xkyp1b"
+  version_hash: "10jn4jb"
 };
 async function get_hooks() {
   let handle;
@@ -1750,7 +1948,7 @@ async function get_hooks() {
   };
 }
 export {
-  BROWSER as B,
+  DEV as D,
   assets as a,
   base as b,
   app_dir as c,

@@ -5,14 +5,28 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev --host 0.0.0.0 --port 3000",
+    "dev:local": "FLUX_ENVIRONMENT=local vite dev --host 0.0.0.0 --port 3000",
+    "dev:cloud": "FLUX_ENVIRONMENT=cloud vite dev --host 0.0.0.0 --port 3000",
+    "dev:hybrid": "FLUX_ENVIRONMENT=hybrid vite dev --host 0.0.0.0 --port 3000",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
-    "start": "node build/index.js",
+    "start": "bun run migrate && node build/index.js",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "lint": "prettier --check . && eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "migrate": "bun run src/lib/database/migrate.ts run",
+    "migrate:status": "bun run src/lib/database/migrate.ts status",
+    "config:show": "bun -e 'import(\"./src/lib/config/environment.ts\").then(m => m.printConfig())'",
+    "redis:start": "redis-server --port 54379 --daemonize yes",
+    "redis:stop": "redis-cli -p 54379 shutdown",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "setup:local": "bun run supabase:start && bun run redis:start && echo 'Local services started'",
+    "setup:stop": "bun run supabase:stop && bun run redis:stop && echo 'Local services stopped'",
+    "setup": "./scripts/setup-dev.sh"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.49.8",
     "@sveltejs/adapter-node": "^5.0.1",
     "@sveltejs/kit": "^2.0.0",
     "pg": "^8.11.3",
@@ -54,4 +68,4 @@
   ],
   "author": "Flux Team",
   "license": "MIT"
-} 
+}
