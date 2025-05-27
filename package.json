@@ -4,10 +4,10 @@
   "description": "Flux - Next-generation expense tracking backend with AI, IoT, and blockchain integration",
   "type": "module",
   "scripts": {
-    "dev": "vite dev --host 0.0.0.0 --port 3000",
-    "dev:local": "FLUX_ENVIRONMENT=local vite dev --host 0.0.0.0 --port 3000",
-    "dev:cloud": "FLUX_ENVIRONMENT=cloud vite dev --host 0.0.0.0 --port 3000",
-    "dev:hybrid": "FLUX_ENVIRONMENT=hybrid vite dev --host 0.0.0.0 --port 3000",
+    "dev": "vite dev --host 0.0.0.0 --port 3001",
+    "dev:local": "FLUX_ENVIRONMENT=local vite dev --host 0.0.0.0 --port 3001",
+    "dev:cloud": "FLUX_ENVIRONMENT=cloud vite dev --host 0.0.0.0 --port 3001",
+    "dev:hybrid": "FLUX_ENVIRONMENT=hybrid vite dev --host 0.0.0.0 --port 3001",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
     "start": "bun run migrate && node build/index.js",
@@ -23,13 +23,17 @@
     "supabase:stop": "supabase stop",
     "setup:local": "bun run supabase:start && bun run redis:start && echo 'Local services started'",
     "setup:stop": "bun run supabase:stop && bun run redis:stop && echo 'Local services stopped'",
-    "setup": "./scripts/setup-dev.sh"
+    "setup": "./scripts/setup-dev.sh",
+    "test:expenses": "./scripts/run-expense-tests.sh",
+    "test:token": "node scripts/utils/test-auth.js",
+    "test": "bun run test:expenses"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
     "@sveltejs/adapter-node": "^5.0.1",
     "@sveltejs/kit": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^3.3.2",
     "pg": "^8.11.3",
     "redis": "^4.6.12",
     "zod": "^3.22.4"
