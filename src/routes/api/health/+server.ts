@@ -134,15 +134,10 @@ export const HEAD: RequestHandler = async () => {
 };
 
 /**
- * Flux Health Check API
- * GET: Simple health check endpoint
+ * Simple health check helper function
+ * Used for simple status responses
  */
-
-/**
- * GET /api/health
- * Simple health check endpoint
- */
-export const GET_SIMPLE: RequestHandler = async () => {
+export const _getSimple = async () => {
     return json({
         status: 'ok',
         message: 'Flux API is running',
