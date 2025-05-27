@@ -1,5 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { getEnabledProviders } from '$lib/services/auth/oauth-providers.js';
+import { checkSupabaseHealth } from '$lib/database/supabase.js';
 
 /**
  * Flux Health Check Endpoint
@@ -9,6 +11,17 @@ export const GET: RequestHandler = async () => {
   const startTime = Date.now();
 
   try {
+    // Check Supabase connection
+    const supabaseHealth = await checkSupabaseHealth();
+    
+    // Get enabled OAuth providers
+    const oauthProviders = getEnabledProviders();
+    
+    // Check if OAuth is properly configured
+    const githubConfigured = !!process.env.GITHUB_CLIENT_ID && !!process.env.GITHUB_CLIENT_SECRET;
+    const googleConfigured = !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET;
+    const webhookConfigured = !!process.env.WEBHOOK_SECRET;
+    
     const responseTime = Date.now() - startTime;
 
     return json({
@@ -31,17 +44,36 @@ export const GET: RequestHandler = async () => {
           node: process.version,
           platform: process.platform
         },
+        
+        // Auth status
+        auth: {
+          supabase: supabaseHealth.status,
+          oauthProviders: {
+            available: oauthProviders.map(p => p.name),
+            github: {
+              enabled: oauthProviders.some(p => p.name === 'github'),
+              configured: githubConfigured
+            },
+            google: {
+              enabled: oauthProviders.some(p => p.name === 'google'),
+              configured: googleConfigured
+            }
+          },
+          webhook: {
+            configured: webhookConfigured
+          }
+        },
 
         // Phase completion status
         development: {
-          phase: 'Phase 1 - Backend Foundation',
-          completion: '100%',
+          phase: 'Phase 2 - Authentication System',
+          completion: '90%',
           checkpoints: {
-            'project-foundation': 'completed',
-            'database-infrastructure': 'completed',
-            'middleware-stack': 'completed'
+            'supabase-auth': 'completed',
+            'oauth-providers': 'completed',
+            'user-data-sync': 'completed'
           },
-          nextPhase: 'Phase 2 - Frontend Development'
+          nextPhase: 'Phase 3 - Core API Layer'
         }
       },
       responseTime
@@ -64,7 +96,7 @@ export const GET: RequestHandler = async () => {
         code: 'HEALTH_CHECK_FAILED',
         message: 'Health check encountered an error',
         details: {
-          error: error?.toString()
+          error: error instanceof Error ? error.message : String(error)
         }
       },
       data: {
@@ -99,4 +131,21 @@ export const HEAD: RequestHandler = async () => {
   } catch (error) {
     return new Response(null, { status: 503 });
   }
+};
+
+/**
+ * Flux Health Check API
+ * GET: Simple health check endpoint
+ */
+
+/**
+ * GET /api/health
+ * Simple health check endpoint
+ */
+export const GET_SIMPLE: RequestHandler = async () => {
+    return json({
+        status: 'ok',
+        message: 'Flux API is running',
+        timestamp: new Date().toISOString()
+    });
 }; 

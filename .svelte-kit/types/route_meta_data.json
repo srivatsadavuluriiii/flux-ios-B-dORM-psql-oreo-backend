@@ -3,8 +3,20 @@
 	"/api/admin/migrate": [
 		"src/routes/api/admin/migrate/+server.ts"
 	],
+	"/api/database-health": [
+		"src/routes/api/database-health/+server.ts"
+	],
+	"/api/debug/profile-operations": [
+		"src/routes/api/debug/profile-operations/+server.ts"
+	],
+	"/api/debug/user-operations": [
+		"src/routes/api/debug/user-operations/+server.ts"
+	],
 	"/api/health": [
 		"src/routes/api/health/+server.ts"
+	],
+	"/api/health/ping": [
+		"src/routes/api/health/ping/+server.ts"
 	],
 	"/api/v1/auth/oauth": [
 		"src/routes/api/v1/auth/oauth/+server.ts"
@@ -39,17 +51,44 @@
 	"/api/v1/auth/webhook": [
 		"src/routes/api/v1/auth/webhook/+server.ts"
 	],
+	"/api/v1/dashboard": [
+		"src/routes/api/v1/dashboard/+server.ts"
+	],
 	"/api/v1/expenses": [
 		"src/routes/api/v1/expenses/+server.ts"
 	],
 	"/api/v1/expenses/analytics": [
 		"src/routes/api/v1/expenses/analytics/+server.ts"
 	],
+	"/api/v1/expenses/bulk": [
+		"src/routes/api/v1/expenses/bulk/+server.ts"
+	],
 	"/api/v1/expenses/categories": [
 		"src/routes/api/v1/expenses/categories/+server.ts"
 	],
+	"/api/v1/expenses/search": [
+		"src/routes/api/v1/expenses/search/+server.ts"
+	],
+	"/api/v1/expenses/settle": [
+		"src/routes/api/v1/expenses/settle/+server.ts"
+	],
+	"/api/v1/expenses/test": [
+		"src/routes/api/v1/expenses/test/+server.ts"
+	],
+	"/api/v1/expenses/test/categories": [
+		"src/routes/api/v1/expenses/test/categories/+server.ts"
+	],
 	"/api/v1/expenses/[id]": [
 		"src/routes/api/v1/expenses/[id]/+server.ts"
+	],
+	"/api/v1/groups/expenses": [
+		"src/routes/api/v1/groups/expenses/+server.ts"
+	],
+	"/api/v1/groups/members": [
+		"src/routes/api/v1/groups/members/+server.ts"
+	],
+	"/api/v1/settlements": [
+		"src/routes/api/v1/settlements/+server.ts"
 	],
 	"/api/v1/test": [
 		"src/routes/api/v1/test/+server.ts"

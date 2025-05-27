@@ -1,14 +1,14 @@
 /**
  * Flux Expense Categories API
- * GET: List expense categories (system + user custom)
- * POST: Create custom expense category
+ * GET: List expense categories
+ * POST: Create new expense category
  */
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { requireAuth } from '../../../../../lib/middleware/auth-middleware.js';
+import { requireTestAuth } from '../../../../../lib/middleware/test-auth-middleware.js';
 import { fluxPostgreSQL } from '../../../../../lib/database/postgres.js';
-import { requireAuth, optionalAuth } from '../../../../../lib/middleware/auth-middleware.js';
-import type { QueryConfig } from 'pg';
 
 /**
  * GET /api/v1/expenses/categories
@@ -16,35 +16,106 @@ import type { QueryConfig } from 'pg';
  */
 export const GET: RequestHandler = async ({ request, url, locals }) => {
     try {
-        // Optional authentication - show system categories + user's custom categories if authenticated
-        const user = optionalAuth({ request, url, locals } as any);
-
-        const query: QueryConfig = {
-            text: `
-                SELECT 
-                    id, name, description, icon_name, color_hex, 
-                    parent_category_id, is_system_category, is_public,
-                    created_at
-                FROM expense_categories 
-                WHERE is_system_category = true 
-                   OR (created_by_user_id = $1)
-                   OR (is_public = true)
-                ORDER BY 
-                    is_system_category DESC,
-                    name ASC
-            `,
-            values: [user?.id || null]
-        };
-
-        const result = await fluxPostgreSQL.query(query.text, query.values);
-
-        return json({
-            success: true,
-            data: {
-                categories: result.rows,
-                total: result.rows.length
+        console.log('[Flux Debug] Received request for expense categories');
+        console.log('[Flux Debug] Authorization header:', request.headers.get('Authorization'));
+        
+        // Authenticate user - try test auth first, then regular auth
+        let user;
+        try {
+            console.log('[Flux Debug] Attempting test auth...');
+            user = requireTestAuth({ request, url, locals } as any);
+            console.log('[Flux Debug] Test auth successful:', user.id);
+        } catch (e) {
+            console.log('[Flux Debug] Test auth failed, trying regular auth');
+            // Fall back to regular auth
+            try {
+                user = requireAuth({ request, url, locals } as any);
+                console.log('[Flux Debug] Regular auth successful:', user.id);
+            } catch (e2) {
+                console.error('[Flux Debug] All auth methods failed:', e2);
+                throw e2;
             }
-        });
+        }
+        
+        if (!user) {
+            console.log('[Flux Debug] No user returned from auth');
+            return json({
+                success: false,
+                error: 'Authentication required'
+            }, { status: 401 });
+        }
+
+        console.log('[Flux Debug] User authenticated, proceeding with query. User ID:', user.id);
+
+        // Parse query parameters
+        const searchParams = url.searchParams;
+        const includeSystem = searchParams.get('include_system') === 'true';
+        const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 100;
+        const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0;
+
+        // Build query
+        let whereClause = `WHERE (created_by_user_id = $1 OR is_public = true)`;
+        const values = [user.id];
+
+        if (!includeSystem) {
+            whereClause += ` AND is_system_category = false`;
+        }
+
+        const query = `
+            SELECT 
+                id, name, description, icon_name, color_hex, 
+                parent_category_id, is_system_category, is_public,
+                created_at, updated_at
+            FROM expense_categories
+            ${whereClause}
+            ORDER BY is_system_category DESC, name ASC
+            LIMIT $${values.length + 1} OFFSET $${values.length + 2}
+        `;
+
+        console.log('[Flux Debug] Query:', query);
+        console.log('[Flux Debug] Values:', values);
+
+        // Convert numbers to strings for the query
+        values.push(limit.toString(), offset.toString());
+
+        // Count total
+        const countQuery = `
+            SELECT COUNT(*) as total
+            FROM expense_categories
+            ${whereClause}
+        `;
+
+        console.log('[Flux Debug] Count Query:', countQuery);
+
+        // Execute queries
+        try {
+            console.log('[Flux Debug] Executing queries...');
+            const [result, countResult] = await Promise.all([
+                fluxPostgreSQL.query(query, values),
+                fluxPostgreSQL.query(countQuery, [user.id])
+            ]);
+
+            console.log('[Flux Debug] Query results:', result.rowCount, 'rows');
+
+            const categories = result.rows;
+            const total = parseInt(countResult.rows[0].total);
+
+            console.log('[Flux Debug] Query successful. Returning', categories.length, 'categories');
+
+            return json({
+                success: true,
+                data: {
+                    categories,
+                    total,
+                    limit,
+                    offset,
+                    has_more: total > (offset + limit)
+                }
+            });
+        } catch (dbError) {
+            console.error('[Flux Debug] Database error:', dbError);
+            throw dbError;
+        }
 
     } catch (error) {
         console.error('[Flux API] ❌ Failed to get expense categories:', error);
@@ -57,7 +128,7 @@ export const GET: RequestHandler = async ({ request, url, locals }) => {
 
 /**
  * POST /api/v1/expenses/categories
- * Create custom expense category
+ * Create new expense category
  */
 export const POST: RequestHandler = async ({ request, url, locals }) => {
     try {
@@ -72,7 +143,7 @@ export const POST: RequestHandler = async ({ request, url, locals }) => {
 
         // Parse request body
         const body = await request.json();
-        
+
         // Validate required fields
         if (!body.name) {
             return json({
@@ -81,46 +152,43 @@ export const POST: RequestHandler = async ({ request, url, locals }) => {
             }, { status: 400 });
         }
 
-        // Check if category name already exists for this user
-        const existingQuery: QueryConfig = {
-            text: `
-                SELECT id FROM expense_categories 
-                WHERE name = $1 AND (created_by_user_id = $2 OR is_system_category = true)
-            `,
-            values: [body.name, user.id]
-        };
+        // Check for duplicate category name
+        const checkQuery = `
+            SELECT id FROM expense_categories
+            WHERE name = $1 AND created_by_user_id = $2
+        `;
 
-        const existingResult = await fluxPostgreSQL.query(existingQuery.text, existingQuery.values);
+        const checkResult = await fluxPostgreSQL.query(checkQuery, [body.name, user.id]);
         
-        if (existingResult.rows.length > 0) {
+        if (checkResult && checkResult.rowCount && checkResult.rowCount > 0) {
             return json({
                 success: false,
-                error: 'Category with this name already exists'
-            }, { status: 409 });
+                error: 'A category with this name already exists'
+            }, { status: 400 });
         }
 
-        // Create category
-        const insertQuery: QueryConfig = {
-            text: `
-                INSERT INTO expense_categories (
-                    name, description, icon_name, color_hex, 
-                    parent_category_id, created_by_user_id, is_public
-                ) VALUES (
-                    $1, $2, $3, $4, $5, $6, $7
-                ) RETURNING *
-            `,
-            values: [
-                body.name,
-                body.description || null,
-                body.icon_name || 'tag',
-                body.color_hex || '#6B7280',
-                body.parent_category_id || null,
-                user.id,
-                body.is_public || false
-            ]
-        };
+        // Create new category
+        const query = `
+            INSERT INTO expense_categories (
+                name, description, icon_name, color_hex, 
+                parent_category_id, is_public, created_by_user_id
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id, name, description, icon_name, color_hex, 
+                      parent_category_id, is_system_category, is_public,
+                      created_at, updated_at
+        `;
 
-        const result = await fluxPostgreSQL.query(insertQuery.text, insertQuery.values);
+        const values = [
+            body.name,
+            body.description || null,
+            body.icon_name || null,
+            body.color_hex || null,
+            body.parent_category_id || null,
+            body.is_public || false,
+            user.id
+        ];
+
+        const result = await fluxPostgreSQL.query(query, values);
         const category = result.rows[0];
 
         return json({

@@ -1,6 +1,7 @@
 import { json, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import { getSupabaseClient } from '$lib/database/supabase.js';
+import { userSyncService } from '$lib/services/auth/index.js';
 
 /**
  * GitHub OAuth callback handler
@@ -14,6 +15,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		const code = url.searchParams.get('code');
 		const state = url.searchParams.get('state');
 		const redirectTo = url.searchParams.get('redirectTo') || '/dashboard';
+		const isLinking = url.searchParams.get('linking') === 'true';
 		
 		if (!code) {
 			console.error('[Flux Auth] GitHub OAuth callback: Missing authorization code');
@@ -28,27 +30,48 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		if (error) {
 			console.error('[Flux Auth] GitHub OAuth callback error:', error);
-			return json({
-				success: false,
-				error: error.message || 'GitHub OAuth authentication failed'
-			}, { status: 400 });
+			
+			// Handle specific error cases
+			if (error.message?.includes('already linked')) {
+				return handleOAuthError(
+					'This GitHub account is already linked to another Flux account', 
+					redirectTo,
+					url.origin,
+					'ACCOUNT_ALREADY_LINKED'
+				);
+			}
+			
+			return handleOAuthError(
+				error.message || 'GitHub OAuth authentication failed', 
+				redirectTo,
+				url.origin
+			);
 		}
 
 		if (!data.session || !data.user) {
-			return json({
-				success: false,
-				error: 'GitHub OAuth authentication failed - no session created'
-			}, { status: 400 });
+			return handleOAuthError(
+				'GitHub OAuth authentication failed - no session created', 
+				redirectTo,
+				url.origin
+			);
 		}
 
 		// Log successful authentication
 		console.log(`[Flux Auth] GitHub OAuth successful for user: ${data.user.email}`);
 
+		// Sync user data to Railway PostgreSQL
+		try {
+			await userSyncService.syncUserFromSupabase(data.user);
+		} catch (syncError) {
+			console.error('[Flux Auth] Error syncing user after GitHub OAuth:', syncError);
+			// Continue despite sync error
+		}
+
 		// For API usage, return JSON with session data
 		if (url.searchParams.get('format') === 'json') {
 			return json({
 				success: true,
-				message: 'GitHub OAuth authentication successful',
+				message: isLinking ? 'GitHub account linked successfully' : 'GitHub OAuth authentication successful',
 				data: {
 					user: {
 						id: data.user.id,
@@ -73,6 +96,12 @@ export const GET: RequestHandler = async ({ url }) => {
 		redirectUrl.searchParams.set('access_token', data.session.access_token);
 		redirectUrl.searchParams.set('refresh_token', data.session.refresh_token);
 		redirectUrl.searchParams.set('provider', 'github');
+		
+		// Add success message for linking flow
+		if (isLinking) {
+			redirectUrl.searchParams.set('message', 'GitHub account linked successfully');
+			redirectUrl.searchParams.set('status', 'success');
+		}
 
 		throw redirect(302, redirectUrl.toString());
 
@@ -88,4 +117,30 @@ export const GET: RequestHandler = async ({ url }) => {
 			error: 'Internal server error'
 		}, { status: 500 });
 	}
-}; 
+};
+
+/**
+ * Handle OAuth error with appropriate response
+ */
+function handleOAuthError(
+	message: string, 
+	redirectTo: string, 
+	origin: string,
+	code = 'OAUTH_ERROR'
+): Response {
+	// For API usage
+	if (redirectTo.includes('format=json')) {
+		return json({
+			success: false,
+			error: message,
+			code
+		}, { status: 400 });
+	}
+	
+	// For web usage, redirect with error
+	const errorUrl = new URL(redirectTo, origin);
+	errorUrl.searchParams.set('error', message);
+	errorUrl.searchParams.set('code', code);
+	
+	return redirect(302, errorUrl.toString());
+} 

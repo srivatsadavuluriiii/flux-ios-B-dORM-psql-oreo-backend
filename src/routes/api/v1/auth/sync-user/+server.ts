@@ -6,7 +6,7 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { userSyncService } from '../../../../../lib/services/auth/user-sync.js';
+import { userSyncService } from '../../../../../lib/services/auth/index.js';
 import { getSupabaseAdmin } from '../../../../../lib/database/supabase.js';
 
 /**

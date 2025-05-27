@@ -8,6 +8,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { expenseService } from '../../../../lib/services/expenses/expense-service.js';
 import { requireAuth } from '../../../../lib/middleware/auth-middleware.js';
+import { requireTestAuth } from '../../../../lib/middleware/test-auth-middleware.js';
 
 /**
  * GET /api/v1/expenses
@@ -15,8 +16,15 @@ import { requireAuth } from '../../../../lib/middleware/auth-middleware.js';
  */
 export const GET: RequestHandler = async ({ request, url, locals }) => {
     try {
-        // Authenticate user
-        const user = requireAuth({ request, url, locals } as any);
+        // Authenticate user - try test auth first, then regular auth
+        let user;
+        try {
+            user = requireTestAuth({ request, url, locals } as any);
+        } catch (e) {
+            // Fall back to regular auth
+            user = requireAuth({ request, url, locals } as any);
+        }
+        
         if (!user) {
             return json({
                 success: false,

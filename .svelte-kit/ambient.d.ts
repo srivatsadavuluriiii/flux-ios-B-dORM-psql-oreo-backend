@@ -85,6 +85,11 @@ declare module '$env/static/private' {
 	export const DATA_RETENTION_DAYS: string;
 	export const RAILWAY_ENVIRONMENT: string;
 	export const RAILWAY_API_URL: string;
+	export const SUPABASE_WEBHOOK_SECRET: string;
+	export const FLUX_ENVIRONMENT: string;
+	export const DEBUG: string;
+	export const DEBUG_DATABASE: string;
+	export const DEBUG_AUTH: string;
 	export const NVM_INC: string;
 	export const TERM_PROGRAM: string;
 	export const NODE: string;
@@ -242,6 +247,11 @@ declare module '$env/dynamic/private' {
 		DATA_RETENTION_DAYS: string;
 		RAILWAY_ENVIRONMENT: string;
 		RAILWAY_API_URL: string;
+		SUPABASE_WEBHOOK_SECRET: string;
+		FLUX_ENVIRONMENT: string;
+		DEBUG: string;
+		DEBUG_DATABASE: string;
+		DEBUG_AUTH: string;
 		NVM_INC: string;
 		TERM_PROGRAM: string;
 		NODE: string;

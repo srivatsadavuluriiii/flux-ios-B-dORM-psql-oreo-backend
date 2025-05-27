@@ -157,32 +157,49 @@ export async function handleOAuthCallback(
  */
 export async function linkOAuthProvider(
 	provider: Provider,
-	userId: string
-): Promise<{ success: boolean; error: string | null }> {
+	redirectTo?: string,
+	baseUrl?: string
+): Promise<{ url: string | null; error: string | null }> {
 	try {
+		if (!isProviderSupported(provider)) {
+			return { url: null, error: `Provider ${provider} is not supported or enabled` };
+		}
+
 		const supabase = getSupabaseClient();
+		const providerConfig = OAUTH_PROVIDERS[provider];
 		
-		// Note: linkIdentity API might need different implementation
-		// For now, we'll use signInWithOAuth to link accounts
-		const { error } = await supabase.auth.signInWithOAuth({
+		// Set up linking-specific callback
+		const options: any = {
+			redirectTo: `${baseUrl || 'http://localhost:3000'}/api/v1/auth/oauth/${provider}/callback?linking=true`
+		};
+
+		// Add redirect destination after linking
+		if (redirectTo) {
+			options.redirectTo += `&redirectTo=${encodeURIComponent(redirectTo)}`;
+		}
+
+		// Add provider-specific scopes
+		if (providerConfig.scopes) {
+			options.scopes = providerConfig.scopes;
+		}
+
+		const { data, error } = await supabase.auth.signInWithOAuth({
 			provider,
-			options: {
-				skipBrowserRedirect: true
-			}
+			options
 		});
 
 		if (error) {
 			console.error(`[Flux Auth] Failed to link ${provider} provider:`, error);
-			return { success: false, error: error.message };
+			return { url: null, error: error.message };
 		}
 
-		console.log(`[Flux Auth] Successfully linked ${provider} provider for user: ${userId}`);
-		return { success: true, error: null };
+		console.log(`[Flux Auth] Started OAuth flow to link ${provider} provider`);
+		return { url: data.url, error: null };
 
 	} catch (error) {
 		console.error(`[Flux Auth] Link provider error:`, error);
 		return { 
-			success: false, 
+			url: null, 
 			error: error instanceof Error ? error.message : 'Unknown link provider error' 
 		};
 	}
@@ -192,24 +209,44 @@ export async function linkOAuthProvider(
  * Unlink OAuth provider from user account
  */
 export async function unlinkOAuthProvider(
-	provider: Provider,
-	userId: string
+	provider: Provider
 ): Promise<{ success: boolean; error: string | null }> {
 	try {
 		const supabase = getSupabaseClient();
 		
-		// Note: unlinkIdentity requires identity object, not just provider
-		// This would need to be implemented with proper identity management
-		const { error } = await supabase.rpc('unlink_provider', { 
-			provider_name: provider 
-		});
+		// First get the user's current identities
+		const { data: userData, error: userError } = await supabase.auth.getUser();
+		
+		if (userError || !userData.user) {
+			console.error(`[Flux Auth] Failed to get user for unlinking:`, userError);
+			return { success: false, error: userError?.message || 'User not found' };
+		}
+		
+		// Find the identity for the specified provider
+		const identities = userData.user.identities || [];
+		const identity = identities.find(i => i.provider === provider);
+		
+		if (!identity) {
+			return { success: false, error: `User does not have ${provider} linked` };
+		}
+		
+		// Check if this is the user's only identity (can't unlink the last one)
+		if (identities.length <= 1) {
+			return { 
+				success: false, 
+				error: 'Cannot unlink the only authentication method. Add another login method first.' 
+			};
+		}
+		
+		// Unlink the provider
+		const { error } = await supabase.auth.unlinkIdentity(identity);
 
 		if (error) {
 			console.error(`[Flux Auth] Failed to unlink ${provider} provider:`, error);
 			return { success: false, error: error.message };
 		}
 
-		console.log(`[Flux Auth] Successfully unlinked ${provider} provider for user: ${userId}`);
+		console.log(`[Flux Auth] Successfully unlinked ${provider} provider`);
 		return { success: true, error: null };
 
 	} catch (error) {

@@ -3,6 +3,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { generalRateLimit } from '$lib/middleware/rate-limiting';
 import { cacheResponse } from '$lib/middleware/cache-middleware';
 import { authMiddleware } from '$lib/middleware/auth-middleware';
+import { testAuthMiddleware } from '$lib/middleware/test-auth-middleware';
 
 /**
  * Flux Backend Server Hooks
@@ -101,6 +102,7 @@ export const handle: Handle = sequence(
   corsMiddleware,
   securityMiddleware,
   loggingMiddleware,
+  testAuthMiddleware,
   authMiddleware,
   rateLimitMiddleware,
   cacheMiddleware
