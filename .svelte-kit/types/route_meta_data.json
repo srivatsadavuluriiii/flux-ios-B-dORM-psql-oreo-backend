@@ -90,11 +90,35 @@
 	"/api/v1/expenses/[id]": [
 		"src/routes/api/v1/expenses/[id]/+server.ts"
 	],
+	"/api/v1/groups": [
+		"src/routes/api/v1/groups/+server.ts"
+	],
 	"/api/v1/groups/expenses": [
 		"src/routes/api/v1/groups/expenses/+server.ts"
 	],
+	"/api/v1/groups/join": [
+		"src/routes/api/v1/groups/join/+server.ts"
+	],
 	"/api/v1/groups/members": [
 		"src/routes/api/v1/groups/members/+server.ts"
+	],
+	"/api/v1/groups/[id]": [
+		"src/routes/api/v1/groups/[id]/+server.ts"
+	],
+	"/api/v1/groups/[id]/expenses": [
+		"src/routes/api/v1/groups/[id]/expenses/+server.ts"
+	],
+	"/api/v1/groups/[id]/join-code": [
+		"src/routes/api/v1/groups/[id]/join-code/+server.ts"
+	],
+	"/api/v1/groups/[id]/members": [
+		"src/routes/api/v1/groups/[id]/members/+server.ts"
+	],
+	"/api/v1/groups/[id]/members/[userId]": [
+		"src/routes/api/v1/groups/[id]/members/[userId]/+server.ts"
+	],
+	"/api/v1/groups/[id]/settlements": [
+		"src/routes/api/v1/groups/[id]/settlements/+server.ts"
 	],
 	"/api/v1/settlements": [
 		"src/routes/api/v1/settlements/+server.ts"

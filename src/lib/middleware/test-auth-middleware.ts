@@ -28,11 +28,11 @@ function getJwtSecret(): string {
 		
 		// Final fallback
 		console.warn('[Flux Test Auth] JWT_SECRET not found in .env file, using default test secret');
-		return 'flux_development_secret';
+		return 'flux-test-secret-key-for-development-only';
 	} catch (error) {
 		console.warn('[Flux Test Auth] Error reading JWT_SECRET:', error);
 		// Fallback to a default secret for testing
-		return 'flux_development_secret';
+		return 'flux-test-secret-key-for-development-only';
 	}
 }
 
