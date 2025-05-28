@@ -2,6 +2,7 @@ import { createClient } from "redis";
 import { F as FLUX_CONFIG } from "./environment.js";
 import { j as json } from "./index.js";
 import { a as authMiddleware } from "./auth-middleware.js";
+import { t as testAuthMiddleware } from "./test-auth-middleware.js";
 function sequence(...handlers) {
   const length = handlers.length;
   if (!length) return ({ event, resolve }) => resolve(event);
@@ -411,6 +412,7 @@ const handle = sequence(
   corsMiddleware,
   securityMiddleware,
   loggingMiddleware,
+  testAuthMiddleware,
   authMiddleware,
   rateLimitMiddleware,
   cacheMiddleware

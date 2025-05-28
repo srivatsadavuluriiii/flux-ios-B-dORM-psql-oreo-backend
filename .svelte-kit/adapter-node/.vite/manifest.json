@@ -46,6 +46,13 @@
     "file": "chunks/index2.js",
     "name": "index"
   },
+  "_index3.js": {
+    "file": "chunks/index3.js",
+    "name": "index",
+    "imports": [
+      "_user-sync.js"
+    ]
+  },
   "_internal.js": {
     "file": "chunks/internal.js",
     "name": "internal",
@@ -55,6 +62,13 @@
     ],
     "dynamicImports": [
       "src/hooks.server.ts"
+    ]
+  },
+  "_oauth-providers.js": {
+    "file": "chunks/oauth-providers.js",
+    "name": "oauth-providers",
+    "imports": [
+      "_supabase.js"
     ]
   },
   "_postgres.js": {
@@ -70,6 +84,10 @@
     "imports": [
       "_environment.js"
     ]
+  },
+  "_test-auth-middleware.js": {
+    "file": "chunks/test-auth-middleware.js",
+    "name": "test-auth-middleware"
   },
   "_user-sync.js": {
     "file": "chunks/user-sync.js",
@@ -118,7 +136,8 @@
     "imports": [
       "_environment.js",
       "_index.js",
-      "_auth-middleware.js"
+      "_auth-middleware.js",
+      "_test-auth-middleware.js"
     ]
   },
   "src/routes/+page.svelte": {
@@ -133,10 +152,64 @@
       "_app/immutable/assets/_page.D1VyOzKh.css"
     ]
   },
+  "src/routes/api/admin/migrate/+server.ts": {
+    "file": "entries/endpoints/api/admin/migrate/_server.ts.js",
+    "name": "entries/endpoints/api/admin/migrate/_server.ts",
+    "src": "src/routes/api/admin/migrate/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_postgres.js"
+    ]
+  },
+  "src/routes/api/database-health/+server.ts": {
+    "file": "entries/endpoints/api/database-health/_server.ts.js",
+    "name": "entries/endpoints/api/database-health/_server.ts",
+    "src": "src/routes/api/database-health/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_postgres.js",
+      "_environment.js"
+    ]
+  },
+  "src/routes/api/debug/profile-operations/+server.ts": {
+    "file": "entries/endpoints/api/debug/profile-operations/_server.ts.js",
+    "name": "entries/endpoints/api/debug/profile-operations/_server.ts",
+    "src": "src/routes/api/debug/profile-operations/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_index3.js",
+      "_postgres.js"
+    ]
+  },
+  "src/routes/api/debug/user-operations/+server.ts": {
+    "file": "entries/endpoints/api/debug/user-operations/_server.ts.js",
+    "name": "entries/endpoints/api/debug/user-operations/_server.ts",
+    "src": "src/routes/api/debug/user-operations/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_index3.js",
+      "_postgres.js"
+    ]
+  },
   "src/routes/api/health/+server.ts": {
     "file": "entries/endpoints/api/health/_server.ts.js",
     "name": "entries/endpoints/api/health/_server.ts",
     "src": "src/routes/api/health/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_oauth-providers.js",
+      "_supabase.js"
+    ]
+  },
+  "src/routes/api/health/ping/+server.ts": {
+    "file": "entries/endpoints/api/health/ping/_server.ts.js",
+    "name": "entries/endpoints/api/health/ping/_server.ts",
+    "src": "src/routes/api/health/ping/+server.ts",
     "isEntry": true,
     "imports": [
       "_index.js"
@@ -149,7 +222,7 @@
     "isEntry": true,
     "imports": [
       "_index.js",
-      "_environment.js"
+      "_oauth-providers.js"
     ]
   },
   "src/routes/api/v1/auth/oauth/github/+server.ts": {
@@ -169,7 +242,8 @@
     "isEntry": true,
     "imports": [
       "_index.js",
-      "_supabase.js"
+      "_supabase.js",
+      "_index3.js"
     ]
   },
   "src/routes/api/v1/auth/oauth/google/+server.ts": {
@@ -189,7 +263,31 @@
     "isEntry": true,
     "imports": [
       "_index.js",
+      "_supabase.js",
+      "_index3.js"
+    ]
+  },
+  "src/routes/api/v1/auth/oauth/link-provider/+server.ts": {
+    "file": "entries/endpoints/api/v1/auth/oauth/link-provider/_server.ts.js",
+    "name": "entries/endpoints/api/v1/auth/oauth/link-provider/_server.ts",
+    "src": "src/routes/api/v1/auth/oauth/link-provider/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_oauth-providers.js",
       "_supabase.js"
+    ]
+  },
+  "src/routes/api/v1/auth/oauth/unlink-provider/+server.ts": {
+    "file": "entries/endpoints/api/v1/auth/oauth/unlink-provider/_server.ts.js",
+    "name": "entries/endpoints/api/v1/auth/oauth/unlink-provider/_server.ts",
+    "src": "src/routes/api/v1/auth/oauth/unlink-provider/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_oauth-providers.js",
+      "_supabase.js",
+      "_index3.js"
     ]
   },
   "src/routes/api/v1/auth/profile/+server.ts": {
@@ -239,7 +337,7 @@
     "isEntry": true,
     "imports": [
       "_index.js",
-      "_user-sync.js",
+      "_index3.js",
       "_supabase.js"
     ]
   },
@@ -250,7 +348,18 @@
     "isEntry": true,
     "imports": [
       "_index.js",
-      "_user-sync.js"
+      "_index3.js"
+    ]
+  },
+  "src/routes/api/v1/dashboard/+server.ts": {
+    "file": "entries/endpoints/api/v1/dashboard/_server.ts.js",
+    "name": "entries/endpoints/api/v1/dashboard/_server.ts",
+    "src": "src/routes/api/v1/dashboard/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_auth-middleware.js",
+      "_postgres.js"
     ]
   },
   "src/routes/api/v1/expenses/+server.ts": {
@@ -261,7 +370,8 @@
     "imports": [
       "_index.js",
       "_expense-service.js",
-      "_auth-middleware.js"
+      "_auth-middleware.js",
+      "_test-auth-middleware.js"
     ]
   },
   "src/routes/api/v1/expenses/[id]/+server.ts": {
@@ -286,6 +396,17 @@
       "_auth-middleware.js"
     ]
   },
+  "src/routes/api/v1/expenses/bulk/+server.ts": {
+    "file": "entries/endpoints/api/v1/expenses/bulk/_server.ts.js",
+    "name": "entries/endpoints/api/v1/expenses/bulk/_server.ts",
+    "src": "src/routes/api/v1/expenses/bulk/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_auth-middleware.js",
+      "_postgres.js"
+    ]
+  },
   "src/routes/api/v1/expenses/categories/+server.ts": {
     "file": "entries/endpoints/api/v1/expenses/categories/_server.ts.js",
     "name": "entries/endpoints/api/v1/expenses/categories/_server.ts",
@@ -293,8 +414,94 @@
     "isEntry": true,
     "imports": [
       "_index.js",
-      "_postgres.js",
-      "_auth-middleware.js"
+      "_auth-middleware.js",
+      "_test-auth-middleware.js",
+      "_postgres.js"
+    ]
+  },
+  "src/routes/api/v1/expenses/search/+server.ts": {
+    "file": "entries/endpoints/api/v1/expenses/search/_server.ts.js",
+    "name": "entries/endpoints/api/v1/expenses/search/_server.ts",
+    "src": "src/routes/api/v1/expenses/search/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_auth-middleware.js",
+      "_postgres.js"
+    ]
+  },
+  "src/routes/api/v1/expenses/settle/+server.ts": {
+    "file": "entries/endpoints/api/v1/expenses/settle/_server.ts.js",
+    "name": "entries/endpoints/api/v1/expenses/settle/_server.ts",
+    "src": "src/routes/api/v1/expenses/settle/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_auth-middleware.js",
+      "_postgres.js"
+    ]
+  },
+  "src/routes/api/v1/expenses/test/+server.ts": {
+    "file": "entries/endpoints/api/v1/expenses/test/_server.ts.js",
+    "name": "entries/endpoints/api/v1/expenses/test/_server.ts",
+    "src": "src/routes/api/v1/expenses/test/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_expense-service.js",
+      "_postgres.js"
+    ]
+  },
+  "src/routes/api/v1/expenses/test/categories/+server.ts": {
+    "file": "entries/endpoints/api/v1/expenses/test/categories/_server.ts.js",
+    "name": "entries/endpoints/api/v1/expenses/test/categories/_server.ts",
+    "src": "src/routes/api/v1/expenses/test/categories/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_postgres.js"
+    ]
+  },
+  "src/routes/api/v1/groups/expenses/+server.ts": {
+    "file": "entries/endpoints/api/v1/groups/expenses/_server.ts.js",
+    "name": "entries/endpoints/api/v1/groups/expenses/_server.ts",
+    "src": "src/routes/api/v1/groups/expenses/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_auth-middleware.js",
+      "_postgres.js"
+    ]
+  },
+  "src/routes/api/v1/groups/members/+server.ts": {
+    "file": "entries/endpoints/api/v1/groups/members/_server.ts.js",
+    "name": "entries/endpoints/api/v1/groups/members/_server.ts",
+    "src": "src/routes/api/v1/groups/members/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_auth-middleware.js",
+      "_postgres.js"
+    ]
+  },
+  "src/routes/api/v1/settlements/+server.ts": {
+    "file": "entries/endpoints/api/v1/settlements/_server.ts.js",
+    "name": "entries/endpoints/api/v1/settlements/_server.ts",
+    "src": "src/routes/api/v1/settlements/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_auth-middleware.js",
+      "_postgres.js"
+    ]
+  },
+  "src/routes/api/v1/test/+server.ts": {
+    "file": "entries/endpoints/api/v1/test/_server.ts.js",
+    "name": "entries/endpoints/api/v1/test/_server.ts",
+    "src": "src/routes/api/v1/test/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index.js"
     ]
   }
 }

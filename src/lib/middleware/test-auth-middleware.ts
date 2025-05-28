@@ -1,10 +1,39 @@
 import type { Handle, RequestEvent } from '@sveltejs/kit';
 import jsonwebtoken from 'jsonwebtoken';
 import type { FluxUser } from '../database/supabase.js';
+import fs from 'fs';
+import path from 'path';
 
 export interface TestAuthLocals {
 	user: FluxUser | null;
 	isAuthenticated: boolean;
+}
+
+// Function to get JWT secret from .env file
+function getJwtSecret(): string {
+	try {
+		// Try to read from environment variable first
+		if (process.env.JWT_SECRET) {
+			return process.env.JWT_SECRET;
+		}
+		
+		// Fallback to reading from .env file
+		const envPath = path.resolve(process.cwd(), '.env');
+		const envContent = fs.readFileSync(envPath, 'utf8');
+		const jwtSecretMatch = envContent.match(/JWT_SECRET=(.+)$/m);
+		
+		if (jwtSecretMatch && jwtSecretMatch[1]) {
+			return jwtSecretMatch[1].trim();
+		}
+		
+		// Final fallback
+		console.warn('[Flux Test Auth] JWT_SECRET not found in .env file, using default test secret');
+		return 'flux_development_secret';
+	} catch (error) {
+		console.warn('[Flux Test Auth] Error reading JWT_SECRET:', error);
+		// Fallback to a default secret for testing
+		return 'flux_development_secret';
+	}
 }
 
 /**
@@ -24,8 +53,8 @@ export const testAuthMiddleware: Handle = async ({ event, resolve }) => {
 			const token = authHeader.substring(7);
 			console.log('[Flux Test Auth] Token found, verifying...');
 			
-			// Verify token with development secret
-			const secretKey = 'flux_development_secret';
+			// Verify token with secret from .env
+			const secretKey = getJwtSecret();
 			try {
 				const payload = jsonwebtoken.verify(token, secretKey);
 				console.log('[Flux Test Auth] Token verified, payload:', payload);
@@ -36,13 +65,13 @@ export const testAuthMiddleware: Handle = async ({ event, resolve }) => {
 						id: payload.sub,
 						aud: 'authenticated',
 						role: payload.role || 'authenticated',
-						email: 'test@flux.dev',
+						email: payload.email || 'test@flux.dev',
 						email_confirmed_at: new Date().toISOString(),
 						app_metadata: {
 							providers: ['test']
 						},
 						user_metadata: {
-							full_name: 'Test User'
+							full_name: payload.name || 'Test User'
 						},
 						created_at: new Date().toISOString(),
 						updated_at: new Date().toISOString(),
@@ -96,9 +125,9 @@ export function requireTestAuth(event: RequestEvent): any {
 	console.log('[Flux Test Auth] Token in requireTestAuth:', token.substring(0, 20) + '...');
 	
 	try {
-		// Verify token with development secret
-		const secretKey = 'flux_development_secret';
-		console.log('[Flux Test Auth] Verifying token with secret:', secretKey);
+		// Verify token with secret from .env
+		const secretKey = getJwtSecret();
+		console.log('[Flux Test Auth] Verifying token with secret');
 		
 		const payload = jsonwebtoken.verify(token, secretKey);
 		console.log('[Flux Test Auth] Token verified in requireTestAuth, payload:', payload);
@@ -109,13 +138,13 @@ export function requireTestAuth(event: RequestEvent): any {
 				id: payload.sub,
 				aud: 'authenticated',
 				role: payload.role || 'authenticated',
-				email: 'test@flux.dev',
+				email: payload.email || 'test@flux.dev',
 				email_confirmed_at: new Date().toISOString(),
 				app_metadata: {
 					providers: ['test']
 				},
 				user_metadata: {
-					full_name: 'Test User'
+					full_name: payload.name || 'Test User'
 				},
 				created_at: new Date().toISOString(),
 				updated_at: new Date().toISOString(),

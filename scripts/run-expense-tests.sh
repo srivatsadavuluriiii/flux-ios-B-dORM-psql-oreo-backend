@@ -26,25 +26,25 @@ fi
 # Set environment variables for testing
 export TEST_USER_ID="55ac3c0f-147e-4888-8888-618acc0d3333"
 export TEST_USERNAME="test.user@flux.app"
-export API_URL="http://localhost:3001"
+export API_URL="http://localhost:3002"
 export USE_MOCKS="true"
 
 # Check if the server is running
 echo -e "${YELLOW}Checking if API server is running...${NC}"
-curl -s "http://localhost:3001/api/health" > /dev/null
+curl -s "http://localhost:3002/api/health" > /dev/null
 if [ $? -ne 0 ]; then
     echo -e "${RED}Error: API server is not running at ${API_URL}${NC}"
     echo -e "${YELLOW}Would you like to start the server? (y/n)${NC}"
     read -r start_server
     if [[ "$start_server" =~ ^[Yy]$ ]]; then
         echo -e "${YELLOW}Starting API server...${NC}"
-        bun run dev --port 3001 &
+        bun run dev --port 3002 &
         SERVER_PID=$!
         echo -e "${YELLOW}Waiting for server to start...${NC}"
         sleep 5
         
         # Check again if server is running
-        curl -s "http://localhost:3001/api/health" > /dev/null
+        curl -s "http://localhost:3002/api/health" > /dev/null
         if [ $? -ne 0 ]; then
             echo -e "${RED}Error: Failed to start API server.${NC}"
             kill $SERVER_PID 2>/dev/null

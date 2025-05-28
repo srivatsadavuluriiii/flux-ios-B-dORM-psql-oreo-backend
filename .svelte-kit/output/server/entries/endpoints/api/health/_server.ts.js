@@ -1,7 +1,14 @@
 import { j as json } from "../../../../chunks/index.js";
+import { g as getEnabledProviders } from "../../../../chunks/oauth-providers.js";
+import { c as checkSupabaseHealth } from "../../../../chunks/supabase.js";
 const GET = async () => {
   const startTime = Date.now();
   try {
+    const supabaseHealth = await checkSupabaseHealth();
+    const oauthProviders = getEnabledProviders();
+    const githubConfigured = !!process.env.GITHUB_CLIENT_ID && !!process.env.GITHUB_CLIENT_SECRET;
+    const googleConfigured = !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET;
+    const webhookConfigured = !!process.env.WEBHOOK_SECRET;
     const responseTime = Date.now() - startTime;
     return json({
       success: true,
@@ -22,16 +29,34 @@ const GET = async () => {
           node: process.version,
           platform: process.platform
         },
+        // Auth status
+        auth: {
+          supabase: supabaseHealth.status,
+          oauthProviders: {
+            available: oauthProviders.map((p) => p.name),
+            github: {
+              enabled: oauthProviders.some((p) => p.name === "github"),
+              configured: githubConfigured
+            },
+            google: {
+              enabled: oauthProviders.some((p) => p.name === "google"),
+              configured: googleConfigured
+            }
+          },
+          webhook: {
+            configured: webhookConfigured
+          }
+        },
         // Phase completion status
         development: {
-          phase: "Phase 1 - Backend Foundation",
-          completion: "100%",
+          phase: "Phase 2 - Authentication System",
+          completion: "90%",
           checkpoints: {
-            "project-foundation": "completed",
-            "database-infrastructure": "completed",
-            "middleware-stack": "completed"
+            "supabase-auth": "completed",
+            "oauth-providers": "completed",
+            "user-data-sync": "completed"
           },
-          nextPhase: "Phase 2 - Frontend Development"
+          nextPhase: "Phase 3 - Core API Layer"
         }
       },
       responseTime
@@ -51,7 +76,7 @@ const GET = async () => {
         code: "HEALTH_CHECK_FAILED",
         message: "Health check encountered an error",
         details: {
-          error: error?.toString()
+          error: error instanceof Error ? error.message : String(error)
         }
       },
       data: {
@@ -83,7 +108,15 @@ const HEAD = async () => {
     return new Response(null, { status: 503 });
   }
 };
+const _getSimple = async () => {
+  return json({
+    status: "ok",
+    message: "Flux API is running",
+    timestamp: (/* @__PURE__ */ new Date()).toISOString()
+  });
+};
 export {
   GET,
-  HEAD
+  HEAD,
+  _getSimple
 };

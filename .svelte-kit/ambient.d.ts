@@ -42,7 +42,6 @@ declare module '$env/static/private' {
 	export const NEXT_PUBLIC_SUPABASE_URL: string;
 	export const SUPABASE_SERVICE_ROLE_KEY: string;
 	export const SUPABASE_ANON_KEY: string;
-	export const SUPABASE_JWT_SECRET: string;
 	export const JWT_SECRET: string;
 	export const JWT_EXPIRES_IN: string;
 	export const JWT_REFRESH_EXPIRES_IN: string;
@@ -85,11 +84,7 @@ declare module '$env/static/private' {
 	export const DATA_RETENTION_DAYS: string;
 	export const RAILWAY_ENVIRONMENT: string;
 	export const RAILWAY_API_URL: string;
-	export const SUPABASE_WEBHOOK_SECRET: string;
-	export const FLUX_ENVIRONMENT: string;
-	export const DEBUG: string;
-	export const DEBUG_DATABASE: string;
-	export const DEBUG_AUTH: string;
+	export const ENABLE_REDIS_CACHE: string;
 	export const NVM_INC: string;
 	export const TERM_PROGRAM: string;
 	export const NODE: string;
@@ -204,7 +199,6 @@ declare module '$env/dynamic/private' {
 		NEXT_PUBLIC_SUPABASE_URL: string;
 		SUPABASE_SERVICE_ROLE_KEY: string;
 		SUPABASE_ANON_KEY: string;
-		SUPABASE_JWT_SECRET: string;
 		JWT_SECRET: string;
 		JWT_EXPIRES_IN: string;
 		JWT_REFRESH_EXPIRES_IN: string;
@@ -247,11 +241,7 @@ declare module '$env/dynamic/private' {
 		DATA_RETENTION_DAYS: string;
 		RAILWAY_ENVIRONMENT: string;
 		RAILWAY_API_URL: string;
-		SUPABASE_WEBHOOK_SECRET: string;
-		FLUX_ENVIRONMENT: string;
-		DEBUG: string;
-		DEBUG_DATABASE: string;
-		DEBUG_AUTH: string;
+		ENABLE_REDIS_CACHE: string;
 		NVM_INC: string;
 		TERM_PROGRAM: string;
 		NODE: string;
